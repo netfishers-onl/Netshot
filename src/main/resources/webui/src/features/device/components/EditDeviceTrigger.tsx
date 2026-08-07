@@ -7,7 +7,7 @@ import FormControl, { FormControlType, PASSWORD_UNCHANGED } from "@/components/F
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
-import { CredentialSetType, Device } from "@/types"
+import { CredentialSetType, Device, HttpsCaTrustMode, SshHostKeyVerification } from "@/types"
 import validators from "@/utils/validators"
 import { Alert, Separator, Stack } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -108,6 +108,11 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
         authKey: access?.specificCredentialSet ? PASSWORD_UNCHANGED : "",
         privType: access?.specificCredentialSet?.privType,
         privKey: access?.specificCredentialSet ? PASSWORD_UNCHANGED : "",
+        sshHostKeyVerification: access?.sshHostKeyVerification ?? SshHostKeyVerification.TrustKnown,
+        sshTrustedHostKeys: access?.sshTrustedHostKeys ?? "",
+        httpsCaTrustMode: access?.httpsCaTrustMode ?? HttpsCaTrustMode.SystemTruststore,
+        httpsCustomCaCertificate: access?.httpsCustomCaCertificate ?? "",
+        httpsVerifyHostname: access?.httpsVerifyHostname ?? true,
       }
     }) as DeviceAccessFormValue[]
 

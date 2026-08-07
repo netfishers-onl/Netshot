@@ -102,6 +102,7 @@ public class JsCliHelper {
 					sshAccount.getPassword(), this.taskContext);
 			}
 			ssh.applySshConfig(accessDef.getSshConfig());
+			ssh.setHostKeyVerifier(this.accessManager.resolveSshHostKeyVerifier(accessDef));
 			return ssh;
 		}
 		Telnet telnet = new Telnet(host, port, this.taskContext);

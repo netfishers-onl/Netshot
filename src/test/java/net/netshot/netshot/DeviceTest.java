@@ -1578,4 +1578,84 @@ public class DeviceTest extends WithDatabaseTest {
 		}
 
 	}
+
+	@Nested
+	@DisplayName("Device access replace test")
+	class DeviceAccessReplaceTest {
+
+		private Device fakeDevice() {
+			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+			return new Device("CiscoIOS12", null, domain, "test");
+		}
+
+		@Test
+		@DisplayName("replaceAccesses copies the SSH/HTTPS trust fields onto the managed access")
+		void replaceAccessesCopiesTrustFields() {
+			Device device = fakeDevice();
+			DeviceAccess sshIncoming = new DeviceAccess(device, "ssh");
+			sshIncoming.setSshHostKeyVerification(DeviceAccess.SshHostKeyVerification.TRUST_KNOWN);
+			sshIncoming.setSshTrustedHostKeys("ssh-ed25519 AAAAKEY");
+			DeviceAccess httpsIncoming = new DeviceAccess(device, "https");
+			httpsIncoming.setHttpsCaTrustMode(DeviceAccess.HttpsCaTrustMode.CUSTOM_CA);
+			httpsIncoming.setHttpsCustomCaCertificate("-----BEGIN CERTIFICATE-----FAKE-----END CERTIFICATE-----");
+			httpsIncoming.setHttpsVerifyHostname(false);
+
+			device.replaceAccesses(List.of(sshIncoming, httpsIncoming));
+
+			DeviceAccess sshAccess = device.getDeviceAccess("ssh");
+			Assertions.assertEquals(DeviceAccess.SshHostKeyVerification.TRUST_KNOWN, sshAccess.getSshHostKeyVerification());
+			Assertions.assertEquals("ssh-ed25519 AAAAKEY", sshAccess.getSshTrustedHostKeys());
+			Assertions.assertNotNull(sshAccess.getSshTrustedHostKeysSince(),
+				"Setting a trusted key for the first time should stamp 'since'");
+
+			DeviceAccess httpsAccess = device.getDeviceAccess("https");
+			Assertions.assertEquals(DeviceAccess.HttpsCaTrustMode.CUSTOM_CA, httpsAccess.getHttpsCaTrustMode());
+			Assertions.assertEquals("-----BEGIN CERTIFICATE-----FAKE-----END CERTIFICATE-----",
+				httpsAccess.getHttpsCustomCaCertificate());
+			Assertions.assertFalse(httpsAccess.isHttpsVerifyHostname());
+		}
+
+		@Test
+		@DisplayName("replaceAccesses actually clears the trusted host keys when resubmitted empty (regression test)")
+		void replaceAccessesClearsTrustedHostKeys() {
+			Device device = fakeDevice();
+			DeviceAccess initial = new DeviceAccess(device, "ssh");
+			initial.setSshHostKeyVerification(DeviceAccess.SshHostKeyVerification.TRUST_KNOWN);
+			initial.setSshTrustedHostKeys("ssh-ed25519 AAAAKEY");
+			device.replaceAccesses(List.of(initial));
+			Assertions.assertEquals("ssh-ed25519 AAAAKEY", device.getDeviceAccess("ssh").getSshTrustedHostKeys());
+			Assertions.assertNotNull(device.getDeviceAccess("ssh").getSshTrustedHostKeysSince());
+
+			// Re-submit with the field cleared, as the "clear" button in the device edit form does.
+			DeviceAccess cleared = new DeviceAccess(device, "ssh");
+			cleared.setSshHostKeyVerification(DeviceAccess.SshHostKeyVerification.TRUST_KNOWN);
+			cleared.setSshTrustedHostKeys(null);
+			device.replaceAccesses(List.of(cleared));
+
+			DeviceAccess sshAccess = device.getDeviceAccess("ssh");
+			Assertions.assertNull(sshAccess.getSshTrustedHostKeys(), "The trusted host keys should actually be cleared");
+			Assertions.assertNull(sshAccess.getSshTrustedHostKeysSince(),
+				"The 'since' timestamp should be cleared along with the keys");
+		}
+
+		@Test
+		@DisplayName("replaceAccesses does not bump sshTrustedHostKeysSince when resubmitted unchanged")
+		void replaceAccessesKeepsSinceWhenUnchanged() throws InterruptedException {
+			Device device = fakeDevice();
+			DeviceAccess initial = new DeviceAccess(device, "ssh");
+			initial.setSshTrustedHostKeys("ssh-ed25519 AAAAKEY");
+			device.replaceAccesses(List.of(initial));
+			Date firstSince = device.getDeviceAccess("ssh").getSshTrustedHostKeysSince();
+			Assertions.assertNotNull(firstSince);
+
+			Thread.sleep(5);
+
+			DeviceAccess resubmitted = new DeviceAccess(device, "ssh");
+			resubmitted.setSshTrustedHostKeys("ssh-ed25519 AAAAKEY");
+			device.replaceAccesses(List.of(resubmitted));
+
+			Assertions.assertEquals(firstSince, device.getDeviceAccess("ssh").getSshTrustedHostKeysSince(),
+				"Resubmitting the same value should not touch the 'since' timestamp");
+		}
+	}
 }

@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -472,6 +473,21 @@ public class Device {
 	}
 
 	/**
+	 * Records a SSH host key learned via trust-on-first-use, creating the per-access row if
+	 * needed. Used by {@code AccessManager} once a connection using a freshly learned host key
+	 * genuinely succeeds.
+	 * @param accessName the access name (e.g. "ssh")
+	 * @param trustedHostKeys the updated (learned-key-appended) trusted keys block
+	 * @param since when the key was learned
+	 */
+	@Transient
+	public void recordLearnedSshHostKeys(String accessName, String trustedHostKeys, Date since) {
+		DeviceAccess access = this.getOrCreateDeviceAccess(accessName);
+		access.setSshTrustedHostKeys(trustedHostKeys);
+		access.setSshTrustedHostKeysSince(since);
+	}
+
+	/**
 	 * Removes the per-access configuration for the given access name, if any -
 	 * an access with no {@code DeviceAccess} row is never used at all (see
 	 * {@code AccessManager}), so this is how an access still lingering from a
@@ -518,6 +534,14 @@ public class Device {
 			access.setPort(input.getPort());
 			access.setGlobalCredentialSet(input.getGlobalCredentialSet());
 			access.setSpecificCredentialSet(input.getSpecificCredentialSet());
+			access.setSshHostKeyVerification(input.getSshHostKeyVerification());
+			if (!Objects.equals(access.getSshTrustedHostKeys(), input.getSshTrustedHostKeys())) {
+				access.setSshTrustedHostKeys(input.getSshTrustedHostKeys());
+				access.setSshTrustedHostKeysSince(input.getSshTrustedHostKeys() == null ? null : new Date());
+			}
+			access.setHttpsCaTrustMode(input.getHttpsCaTrustMode());
+			access.setHttpsCustomCaCertificate(input.getHttpsCustomCaCertificate());
+			access.setHttpsVerifyHostname(input.isHttpsVerifyHostname());
 		}
 	}
 

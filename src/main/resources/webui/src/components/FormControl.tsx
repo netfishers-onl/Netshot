@@ -171,7 +171,6 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
     },
     autoFocus,
     variant,
-    mono,
   }
 
   const togglePassword = useCallback(() => {
@@ -479,6 +478,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
             autoresize={autosize}
             value={isUnchanged ? "••••••••" : field.value == null ? "" : String(field.value as string)}
             disabled={disabled || isUnchanged}
+            fontFamily={mono ? "mono" : undefined}
             {...inputProps}
             ref={(inputRef) => {
               inputProps.ref(inputRef)

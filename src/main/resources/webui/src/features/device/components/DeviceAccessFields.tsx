@@ -3,7 +3,7 @@ import FormControl, { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import Switch from "@/components/Switch"
 import BulkEditLockToggle from "./BulkEditLockToggle"
-import { CredentialSet, CredentialSetType, DeviceAccess, DeviceAccessDefinition, DeviceTypeProtocol, HashingAlgorithm } from "@/types"
+import { CredentialSet, CredentialSetType, DeviceAccess, DeviceAccessDefinition, DeviceTypeProtocol, HashingAlgorithm, HttpsCaTrustMode, SshHostKeyVerification } from "@/types"
 import { Collapsible, Field, Group, Separator, Stack, Text } from "@chakra-ui/react"
 import { useEffect, useMemo, useState } from "react"
 import { Control, useController, useFieldArray, useWatch } from "react-hook-form"
@@ -38,6 +38,11 @@ export type DeviceAccessFormValue = {
   authKey?: string | null
   privType?: HashingAlgorithm
   privKey?: string | null
+  sshHostKeyVerification: SshHostKeyVerification
+  sshTrustedHostKeys: string
+  httpsCaTrustMode: HttpsCaTrustMode
+  httpsCustomCaCertificate: string
+  httpsVerifyHostname: boolean
 }
 
 export type DeviceAccessFieldsProps = {
@@ -175,6 +180,7 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
           required={!allowUnchanged}
           allowUnchanged={allowUnchanged}
           autosize
+          mono
           rows={2}
           type={FormControlType.LongText}
           label={t("network.sshPrivateKey")}
@@ -325,6 +331,37 @@ const SSH_AUTH_METHOD_OPTIONS = [
   { label: "network.sshPrivateKey", value: "key" },
 ] as const
 
+const SSH_HOST_KEY_VERIFICATION_OPTIONS = [
+  {
+    label: "device.sshHostKeyVerificationTrustKnown",
+    description: "device.sshHostKeyVerificationTrustKnownDescription",
+    value: SshHostKeyVerification.TrustKnown,
+  },
+  {
+    label: "device.sshHostKeyVerificationTrustAny",
+    description: "device.sshHostKeyVerificationTrustAnyDescription",
+    value: SshHostKeyVerification.TrustAny,
+  },
+] as const
+
+const HTTPS_CA_TRUST_MODE_OPTIONS = [
+  {
+    label: "device.httpsCaTrustModeSystemTruststore",
+    description: "device.httpsCaTrustModeSystemTruststoreDescription",
+    value: HttpsCaTrustMode.SystemTruststore,
+  },
+  {
+    label: "device.httpsCaTrustModeCustomCa",
+    description: "device.httpsCaTrustModeCustomCaDescription",
+    value: HttpsCaTrustMode.CustomCa,
+  },
+  {
+    label: "device.httpsCaTrustModeTrustAny",
+    description: "device.httpsCaTrustModeTrustAnyDescription",
+    value: HttpsCaTrustMode.TrustAny,
+  },
+] as const
+
 /** Formats an overridden address/port pair for the row's collapsed summary, e.g. "10.216.5.3:2222", "10.216.5.3", ":2222". */
 function formatConnectionOverride(address: string, port: string): string {
   if (address && port) {
@@ -396,6 +433,10 @@ function AccessRow({
   const port = useWatch({ control, name: `accesses.${index}.port` }) as string
   const globalCredentialSetId = useWatch({ control, name: `accesses.${index}.globalCredentialSetId` }) as string
   const sshAuthMethod = useWatch({ control, name: `accesses.${index}.sshAuthMethod` }) as SshAuthMethod
+  const sshHostKeyVerification = useWatch({
+    control, name: `accesses.${index}.sshHostKeyVerification`,
+  }) as SshHostKeyVerification
+  const httpsCaTrustMode = useWatch({ control, name: `accesses.${index}.httpsCaTrustMode` }) as HttpsCaTrustMode
 
   // Captured once when the row is created: true only if this access already had a stored
   // secret to preserve (edit mode), so the lock-icon "unchanged" UX only appears then.
@@ -407,6 +448,7 @@ function AccessRow({
   const compatibleTypes = useMemo(() => getCompatibleCredentialTypes(value.protocol), [value.protocol])
   const effectiveSpecificType = getEffectiveSpecificCredentialType(value.protocol, sshAuthMethod)
   const isSsh = value.protocol === DeviceTypeProtocol.Ssh
+  const isHttps = value.protocol === DeviceTypeProtocol.Https
 
   const globalCredentialSetOptions = useMemo(
     () => [
@@ -569,6 +611,69 @@ function AccessRow({
                   />
                 </Stack>
               )}
+              {isSsh && (
+                <Stack direction="column" gap="3">
+                  <Select
+                    label={t("device.sshHostKeyVerification")}
+                    control={control}
+                    name={`accesses.${index}.sshHostKeyVerification`}
+                    options={SSH_HOST_KEY_VERIFICATION_OPTIONS.map((option) => ({
+                      label: t(option.label),
+                      description: t(option.description),
+                      value: option.value,
+                    }))}
+                  />
+                  {sshHostKeyVerification !== SshHostKeyVerification.TrustAny && (
+                    <Stack gap="1">
+                      <FormControl
+                        autosize
+                        mono
+                        clearable
+                        rows={3}
+                        type={FormControlType.LongText}
+                        label={t("device.sshTrustedHostKeys")}
+                        placeholder={t("device.sshTrustedHostKeysPlaceholder")}
+                        control={control}
+                        name={`accesses.${index}.sshTrustedHostKeys`}
+                      />
+                      <Text fontSize="xs" color="fg.muted">{t("device.sshTrustedHostKeysHelp")}</Text>
+                    </Stack>
+                  )}
+                </Stack>
+              )}
+              {isHttps && (
+                <Stack direction="column" gap="3">
+                  <Select
+                    label={t("device.httpsCaTrustMode")}
+                    control={control}
+                    name={`accesses.${index}.httpsCaTrustMode`}
+                    options={HTTPS_CA_TRUST_MODE_OPTIONS.map((option) => ({
+                      label: t(option.label),
+                      description: t(option.description),
+                      value: option.value,
+                    }))}
+                  />
+                  {httpsCaTrustMode === HttpsCaTrustMode.CustomCa && (
+                    <FormControl
+                      autosize
+                      mono
+                      clearable
+                      rows={4}
+                      type={FormControlType.LongText}
+                      label={t("device.httpsCustomCaCertificate")}
+                      placeholder={t("device.httpsCustomCaCertificatePlaceholder")}
+                      control={control}
+                      name={`accesses.${index}.httpsCustomCaCertificate`}
+                    />
+                  )}
+                  <Switch
+                    control={control}
+                    name={`accesses.${index}.httpsVerifyHostname`}
+                    label={t("device.httpsVerifyHostname")}
+                    description={t("device.httpsVerifyHostnameDescription")}
+                  />
+                </Stack>
+              )}
             </>
           )}
         </Stack>
@@ -627,6 +732,11 @@ export default function DeviceAccessFields({ control, accessDefinitions, bulk = 
           authKey: preserveSecret(existing?.authKey),
           privType: existing?.privType,
           privKey: preserveSecret(existing?.privKey),
+          sshHostKeyVerification: existing?.sshHostKeyVerification ?? SshHostKeyVerification.TrustKnown,
+          sshTrustedHostKeys: existing?.sshTrustedHostKeys ?? "",
+          httpsCaTrustMode: existing?.httpsCaTrustMode ?? HttpsCaTrustMode.SystemTruststore,
+          httpsCustomCaCertificate: existing?.httpsCustomCaCertificate ?? "",
+          httpsVerifyHostname: existing?.httpsVerifyHostname ?? true,
         }
       })
     )
@@ -768,6 +878,15 @@ export function buildAccessesPayload(
     }
     if (access.overrideConnection && access.port) {
       entry.port = Number(access.port)
+    }
+    if (access.protocol === DeviceTypeProtocol.Ssh) {
+      entry.sshHostKeyVerification = access.sshHostKeyVerification
+      entry.sshTrustedHostKeys = access.sshTrustedHostKeys || undefined
+    }
+    if (access.protocol === DeviceTypeProtocol.Https) {
+      entry.httpsCaTrustMode = access.httpsCaTrustMode
+      entry.httpsCustomCaCertificate = access.httpsCustomCaCertificate || undefined
+      entry.httpsVerifyHostname = access.httpsVerifyHostname
     }
     if (access.mode === "global" && access.globalCredentialSetId
         && access.globalCredentialSetId !== TRY_ALL_CREDENTIALS_VALUE) {

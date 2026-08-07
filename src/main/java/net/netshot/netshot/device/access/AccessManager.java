@@ -90,6 +90,14 @@ public class AccessManager {
 	private final java.util.Set<DeviceCredentialSet> oneTimeCredentialSets;
 
 	/**
+	 * Every {@link Resolution} created from this {@code AccessManager} (the default
+	 * legacy CLI/SNMP one, plus anything created via {@code client.create(...)}),
+	 * so {@link #disconnectAll()} can close whichever of them ended up actually
+	 * connecting, once the task attempt is done with them.
+	 */
+	private final List<Resolution> resolutions = new ArrayList<>();
+
+	/**
 	 * Instantiates a new access manager for one task attempt.
 	 * @param session the Hibernate session (may be null, e.g. for ad-hoc/test runs)
 	 * @param device the device being accessed
@@ -228,6 +236,21 @@ public class AccessManager {
 	}
 
 	/**
+	 * Disconnects every client that ended up connecting through this {@code AccessManager}
+	 * (the default legacy CLI/SNMP one, plus anything created via {@code client.create(...)}
+	 * in the driver's JS code) - meant to be called once, by {@code DeviceScript.connectRun},
+	 * after the driver script is entirely done with them, regardless of whether it succeeded
+	 * or failed. Without this, a successfully-resolved connection is otherwise never
+	 * explicitly closed and lingers until the underlying transport's own idle timeout
+	 * (e.g. SSH's, ~10mn by default) eventually cleans it up.
+	 */
+	public void disconnectAll() {
+		for (Resolution resolution : this.resolutions) {
+			resolution.close();
+		}
+	}
+
+	/**
 	 * Checks whether an error message matches the historical "Authentication
 	 * failed" convention (driver-declared CLI {@code fail} mode strings, e.g.
 	 * "Authentication failed - Wrong enable password.").
@@ -245,6 +268,56 @@ public class AccessManager {
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
+	}
+
+	/**
+	 * Builds the SSH host key verifier for a given access, reflecting its configured
+	 * {@link DeviceAccess.SshHostKeyVerification} mode and currently trusted keys (or the
+	 * default mode/no trusted keys yet, if the access has no {@link DeviceAccess} row).
+	 * @param accessDef the access to build the verifier for
+	 * @return the verifier, ready to pass to a new {@link Ssh} instance
+	 */
+	public DeviceHostKeyVerifier resolveSshHostKeyVerifier(AccessDefinition accessDef) {
+		DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+		DeviceAccess.SshHostKeyVerification mode = access == null ? null : access.getSshHostKeyVerification();
+		String storedKeys = access == null ? null : access.getSshTrustedHostKeys();
+		return new DeviceHostKeyVerifier(mode, storedKeys, this.taskContext);
+	}
+
+	/**
+	 * Persists a SSH host key learned via TOFU (see {@link Ssh#getLearnedSshHostKeys()}) back
+	 * onto the access's {@link DeviceAccess} row, so later connections check against it. Called
+	 * once a connection genuinely succeeds (see {@link Resolution#tryNext()}) - purely an
+	 * in-memory entity mutation relying on the ambient Hibernate session/transaction, same as
+	 * {@link #pinSuccessfulCredential}.
+	 * @param accessDef the access whose host key was learned
+	 * @param updatedKeys the new (learned-key-appended) trusted keys block
+	 */
+	private void recordLearnedSshHostKey(AccessDefinition accessDef, String updatedKeys) {
+		try {
+			this.device.recordLearnedSshHostKeys(accessDef.getName(), updatedKeys, new java.util.Date());
+			this.taskContext.info(
+				"New SSH host key accepted and saved for access '{}' - it will be verified on next connections.",
+				accessDef.getName());
+		}
+		catch (Exception e) {
+			log.warn("Unable to persist the learned SSH host key for access '{}' on device {}.",
+				accessDef.getName(), this.device.getId(), e);
+		}
+	}
+
+	/**
+	 * Applies the access's configured HTTPS TLS trust policy onto a newly built {@link Http}
+	 * client. No-op for a non-TLS access (the fields are simply unused by {@link Http} then).
+	 * @param accessDef the access
+	 * @param http the newly built client to configure
+	 */
+	public void applyHttpsTrustPolicy(AccessDefinition accessDef, Http http) {
+		DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+		DeviceAccess.HttpsCaTrustMode mode = access == null ? null : access.getHttpsCaTrustMode();
+		String customCa = access == null ? null : access.getHttpsCustomCaCertificate();
+		boolean verifyHostname = access == null || access.isHttpsVerifyHostname();
+		http.applyTrustPolicy(mode, customCa, verifyHostname);
 	}
 
 	/**
@@ -377,12 +450,16 @@ public class AccessManager {
 
 	/**
 	 * Starts a new resolution process for the given ordered list of accesses.
+	 * Tracked in {@link #resolutions} so {@link #disconnectAll()} can close
+	 * whatever it ends up connecting to, once the task attempt is done.
 	 * @param accessDefs the accesses to try, in order (e.g. [ssh, telnet])
 	 * @param factory builds the concrete client for a given access/credential-set pair
 	 * @return a fresh, not-yet-resolved {@link Resolution}
 	 */
 	public Resolution newResolution(List<AccessDefinition> accessDefs, ClientFactory factory) {
-		return new Resolution(accessDefs, factory);
+		Resolution resolution = new Resolution(accessDefs, factory);
+		this.resolutions.add(resolution);
+		return resolution;
 	}
 
 	/**
@@ -427,6 +504,26 @@ public class AccessManager {
 		}
 
 		/**
+		 * Disconnects the currently connected client, if any - called once the task
+		 * attempt is entirely done with this resolution (see {@link AccessManager#disconnectAll()}).
+		 * A no-op if nothing was ever resolved, or it was already disconnected.
+		 */
+		private void close() {
+			if (this.currentClient == null) {
+				return;
+			}
+			try {
+				this.currentClient.disconnect();
+			}
+			catch (Exception e) {
+				log.warn("Error while disconnecting the client for access '{}' on device {}.",
+					this.currentAccessDef == null ? "?" : this.currentAccessDef.getName(),
+					AccessManager.this.device.getId(), e);
+			}
+			this.currentClient = null;
+		}
+
+		/**
 		 * Attempts exactly one candidate (the next one in the list).
 		 * @return the outcome of that single attempt
 		 * @throws IOException propagated when nothing more can reasonably be tried
@@ -451,6 +548,12 @@ public class AccessManager {
 				this.currentCredentialSet = candidate.credentialSet;
 				this.currentAccessDef = candidate.accessDef;
 				this.currentFromAutoPool = candidate.fromAutoPool;
+				if (client instanceof Ssh ssh) {
+					String learnedKeys = ssh.getLearnedSshHostKeys();
+					if (learnedKeys != null) {
+						AccessManager.this.recordLearnedSshHostKey(candidate.accessDef, learnedKeys);
+					}
+				}
 				return AttemptOutcome.SUCCESS;
 			}
 			catch (InvalidCredentialsException e) {

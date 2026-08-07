@@ -87,12 +87,29 @@ export type DeviceBinaryAttribute = {
 
 export type DeviceAttribute = DeviceNumericAttribute | DeviceTextAttribute | DeviceBinaryAttribute
 
+export enum SshHostKeyVerification {
+  TrustAny = "TRUST_ANY",
+  TrustKnown = "TRUST_KNOWN",
+}
+
+export enum HttpsCaTrustMode {
+  TrustAny = "TRUST_ANY",
+  SystemTruststore = "SYSTEM_TRUSTSTORE",
+  CustomCa = "CUSTOM_CA",
+}
+
 export type DeviceAccess = {
   accessName: string
   address?: string
   port?: number
   globalCredentialSet?: CredentialSet
   specificCredentialSet?: CredentialSet
+  sshHostKeyVerification?: SshHostKeyVerification
+  sshTrustedHostKeys?: string
+  sshTrustedHostKeysSince?: number
+  httpsCaTrustMode?: HttpsCaTrustMode
+  httpsCustomCaCertificate?: string
+  httpsVerifyHostname?: boolean
 }
 
 export type Device = {

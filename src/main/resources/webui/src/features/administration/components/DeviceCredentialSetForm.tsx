@@ -197,6 +197,7 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             autosize
+            mono
             rows={2}
             type={FormControlType.LongText}
             label={t("network.sshPrivateKey")}

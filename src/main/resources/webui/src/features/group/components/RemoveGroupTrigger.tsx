@@ -41,7 +41,8 @@ export default function RemoveGroupTrigger({ group, children, ...rest }: RemoveG
             />
           </Text>
           <Alert.Root color="yellow.900" status="warning">
-            {t("group.removeWarning")}
+            <Alert.Indicator />
+            <Alert.Title>{t("group.removeWarning")}</Alert.Title>
           </Alert.Root>
         </Stack>
       ),

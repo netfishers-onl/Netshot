@@ -77,7 +77,16 @@ public abstract class DeviceScript {
 		// warning, not an exception.
 		AccessManager accessManager = AccessManager.forDevice(session, device, this.taskContext, credentialSets);
 
-		this.run(session, device, accessManager);
+		try {
+			this.run(session, device, accessManager);
+		}
+		finally {
+			// Whatever the driver script actually connected to (CLI, SNMP, and/or any
+			// ad-hoc client created via client.create(...)) must be explicitly closed
+			// here - otherwise it lingers until the underlying transport's own idle
+			// timeout eventually cleans it up (e.g. ~10mn by default for SSH).
+			accessManager.disconnectAll();
+		}
 	}
 
 }

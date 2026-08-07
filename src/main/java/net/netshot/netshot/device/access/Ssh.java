@@ -49,7 +49,9 @@ import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.config.hosts.HostConfigEntryResolver;
 import org.apache.sshd.client.config.keys.ClientIdentityLoader;
 import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
+import org.apache.sshd.client.keyverifier.ServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.AttributeRepository;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.NamedResource;
 import org.apache.sshd.common.PropertyResolverUtils;
@@ -404,6 +406,31 @@ public class Ssh extends Cli {
 		CoreModuleProperties.REKEY_BYTES_LIMIT.set(Ssh.client, Ssh.SETTINGS.rekeyDataLimit);
 	}
 
+	/**
+	 * Per-connection attribute key used to smuggle a per-access {@link DeviceHostKeyVerifier}
+	 * across the async connect boundary (see the static {@code sessionEstablished} listener
+	 * below) - {@link Ssh#client} is a single, process-wide, shared {@code SshClient}, so a
+	 * per-access verifier cannot simply be set on it directly. Setting it any later (e.g. on
+	 * the {@link ClientSession} returned by {@code connect().verify()}) would race the actual
+	 * initial key exchange, which can already be under way by the time that call returns (see
+	 * the similar caveat on the session listener registered in {@link #connect(boolean)});
+	 * {@link SessionListener#sessionEstablished} is the documented, race-free extension point
+	 * for customizing session properties from a supplied connection context.
+	 * <p>
+	 * Note: the context must be read from the raw {@code IoSession} attribute
+	 * ({@code session.getIoSession().getAttribute(AttributeRepository.class)}), <em>not</em>
+	 * from {@link ClientSession#getConnectionContext()} - the latter is only populated by a
+	 * field initializer in {@code AbstractClientSession}, which (per normal Java construction
+	 * order) only runs once its superclass's constructor returns; but {@code sessionEstablished}
+	 * is itself fired from inside that superclass ({@code AbstractSession}) constructor, i.e.
+	 * strictly before that field initializer has run - {@code getConnectionContext()} would
+	 * always observe null at this point. The underlying {@code IoSession} attribute, by
+	 * contrast, is populated by the connector before the SSH-level session object (and thus
+	 * before this listener) is even created.
+	 */
+	private static final AttributeRepository.AttributeKey<ServerKeyVerifier> HOST_KEY_VERIFIER_ATTRIBUTE =
+		new AttributeRepository.AttributeKey<>();
+
 	static {
 		// Build global SSH client
 		Ssh.client = SshClient.setUpDefaultClient();
@@ -416,9 +443,24 @@ public class Ssh extends Cli {
 		// Cisco IOS at least doesn't like receiving the identification message from client before sending its own
 		CoreModuleProperties.SEND_IMMEDIATE_IDENTIFICATION.set(Ssh.client, false);
 		CoreModuleProperties.SEND_IMMEDIATE_KEXINIT.set(Ssh.client, false);
-		// Accept all server keys
-		// TODO: implement server key verification and storage per device
+		// Fallback when a connection is established without a per-access verifier
+		// (e.g. tests) - real connections always supply one, see connect(boolean) below.
 		Ssh.client.setServerKeyVerifier(AcceptAllServerKeyVerifier.INSTANCE);
+		Ssh.client.addSessionListener(new SessionListener() {
+			@Override
+			public void sessionEstablished(org.apache.sshd.common.session.Session session) {
+				if (!(session instanceof ClientSession clientSession)) {
+					return;
+				}
+				Object rawContext = session.getIoSession().getAttribute(AttributeRepository.class);
+				ServerKeyVerifier verifier = (rawContext instanceof AttributeRepository context)
+					? context.getAttribute(Ssh.HOST_KEY_VERIFIER_ATTRIBUTE)
+					: null;
+				if (verifier != null) {
+					clientSession.setServerKeyVerifier(verifier);
+				}
+			}
+		});
 		Ssh.client.start();
 	}
 
@@ -442,6 +484,18 @@ public class Ssh extends Cli {
 
 	/** The SSH connection config. */
 	private SshConfig sshConfig = new SshConfig(true);
+
+	/** Per-access host key verifier (trust any/on first use/manual), set via {@link #setHostKeyVerifier}. */
+	@Setter
+	private DeviceHostKeyVerifier hostKeyVerifier;
+
+	/**
+	 * @return the host key(s) learned during the last {@link #connect()} call (TRUST_ON_FIRST_USE
+	 *         mode only), to be persisted by the caller - or null if nothing new was learned.
+	 */
+	public String getLearnedSshHostKeys() {
+		return this.hostKeyVerifier == null ? null : this.hostKeyVerifier.getLearnedKeysUpdate();
+	}
 
 	/**
 	 * Instantiates a new SSH connection (password authentication).
@@ -554,10 +608,24 @@ public class Ssh extends Cli {
 	 */
 	public void connect(boolean openChannel) throws IOException {
 		try {
-			this.session = Ssh.client
-				.connect(this.username, this.host, this.port)
-				.verify(this.connectionTimeout)
-				.getSession();
+			ServerKeyVerifier verifier = this.hostKeyVerifier == null
+				? AcceptAllServerKeyVerifier.INSTANCE : this.hostKeyVerifier;
+			AttributeRepository connectContext =
+				AttributeRepository.ofKeyValuePair(Ssh.HOST_KEY_VERIFIER_ATTRIBUTE, verifier);
+			try {
+				this.session = Ssh.client
+					.connect(this.username, this.host, this.port, connectContext, null)
+					.verify(this.connectionTimeout)
+					.getSession();
+			}
+			catch (SshException e) {
+				if (e.getDisconnectCode() == SshConstants.SSH2_DISCONNECT_HOST_KEY_NOT_VERIFIABLE) {
+					String reason = this.hostKeyVerifier == null ? null : this.hostKeyVerifier.getLastRejectionReason();
+					throw new IOException("SSH host key verification failed"
+						+ (reason == null ? "." : ": " + reason), e);
+				}
+				throw e;
+			}
 
 			// Add session listener to trace protocol negotiation details.
 			// This must be registered before any further session configuration below,

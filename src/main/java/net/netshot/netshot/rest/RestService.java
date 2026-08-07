@@ -18,6 +18,7 @@
  */
 package net.netshot.netshot.rest;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,12 +26,17 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,6 +67,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.sshd.common.config.keys.PublicKeyEntry;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.hibernate.HibernateException;
@@ -2011,6 +2018,23 @@ public class RestService extends Thread {
 					"Invalid port for access '" + access.getAccessName() + "'.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 			}
+			if (access.getSshHostKeyVerification() == null) {
+				access.setSshHostKeyVerification(DeviceAccess.SshHostKeyVerification.TRUST_KNOWN);
+			}
+			access.setSshTrustedHostKeys(
+				RestService.normalizeSshTrustedHostKeys(access.getSshTrustedHostKeys(), access.getAccessName()));
+			if (access.getHttpsCaTrustMode() == null) {
+				access.setHttpsCaTrustMode(DeviceAccess.HttpsCaTrustMode.SYSTEM_TRUSTSTORE);
+			}
+			if (access.getHttpsCaTrustMode() == DeviceAccess.HttpsCaTrustMode.CUSTOM_CA) {
+				if (access.getHttpsCustomCaCertificate() == null || access.getHttpsCustomCaCertificate().isBlank()) {
+					throw new NetshotBadRequestException(
+						"Access '" + access.getAccessName() + "' requires a custom CA certificate "
+							+ "when the HTTPS trust mode is CUSTOM_CA.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+				}
+				RestService.validateHttpsCustomCaCertificate(access.getHttpsCustomCaCertificate(), access.getAccessName());
+			}
 			if (access.getGlobalCredentialSet() == null && access.getSpecificCredentialSet() == null) {
 				continue;
 			}
@@ -2050,6 +2074,81 @@ public class RestService extends Thread {
 					"The specific credential set is not compatible with access '" + access.getAccessName() + "'.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_TYPE);
 			}
+		}
+	}
+
+	/** Recognized SSH public key algorithm name prefixes, to locate the algorithm token in a pasted line. */
+	private static final Pattern SSH_KEY_TYPE_PATTERN = Pattern.compile(
+		"^(ssh-|ecdsa-sha2-|rsa-sha2-|sk-ssh-|sk-ecdsa-).+");
+
+	/**
+	 * Normalizes a block of admin-pasted SSH host key entries into the canonical, storage-ready
+	 * form: one "{@code <algorithm> <base64-key>}" per line, no hostname prefix or trailing
+	 * comment (both optional and tolerated on input, e.g. pasted straight from {@code ssh-keyscan}
+	 * or a {@code known_hosts} file), each validated to actually decode as a public key.
+	 * @param raw the raw, possibly null/blank, pasted block
+	 * @param accessName the access name (for the error message)
+	 * @return the normalized block, or null if {@code raw} had no usable entry
+	 * @throws NetshotBadRequestException if any non-blank, non-comment line is malformed
+	 */
+	private static String normalizeSshTrustedHostKeys(String raw, String accessName) throws NetshotBadRequestException {
+		if (raw == null || raw.isBlank()) {
+			return null;
+		}
+		List<String> normalized = new ArrayList<>();
+		for (String rawLine : raw.split("\\R")) {
+			String line = rawLine.trim();
+			if (line.isEmpty() || line.startsWith("#")) {
+				continue;
+			}
+			String[] tokens = line.split("\\s+");
+			int algorithmIndex = -1;
+			for (int i = 0; i < tokens.length; i++) {
+				if (RestService.SSH_KEY_TYPE_PATTERN.matcher(tokens[i]).matches()) {
+					algorithmIndex = i;
+					break;
+				}
+			}
+			if (algorithmIndex < 0 || algorithmIndex + 1 >= tokens.length) {
+				throw new NetshotBadRequestException(
+					"Invalid SSH host key entry for access '" + accessName + "': '" + line + "'.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+			}
+			String algorithm = tokens[algorithmIndex];
+			String keyData = tokens[algorithmIndex + 1];
+			try {
+				PublicKeyEntry.parsePublicKeyEntry(algorithm + " " + keyData)
+					.resolvePublicKey(null, Collections.emptyMap(), null);
+			}
+			catch (Exception e) {
+				throw new NetshotBadRequestException(
+					"Invalid SSH host key entry for access '" + accessName + "': " + e.getMessage(),
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+			}
+			normalized.add(algorithm + " " + keyData);
+		}
+		return normalized.isEmpty() ? null : String.join("\n", normalized);
+	}
+
+	/**
+	 * Validates that a posted custom CA block parses as at least one X.509 certificate.
+	 * @param pem the PEM-encoded certificate(s)
+	 * @param accessName the access name (for the error message)
+	 * @throws NetshotBadRequestException if the block is malformed or empty
+	 */
+	private static void validateHttpsCustomCaCertificate(String pem, String accessName) throws NetshotBadRequestException {
+		try {
+			CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+			Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(
+				new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8)));
+			if (certificates.isEmpty()) {
+				throw new CertificateException("No certificate found.");
+			}
+		}
+		catch (Exception e) {
+			throw new NetshotBadRequestException(
+				"Invalid custom CA certificate for access '" + accessName + "': " + e.getMessage(),
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 		}
 	}
 

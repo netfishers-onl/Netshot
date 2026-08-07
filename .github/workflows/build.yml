@@ -46,6 +46,29 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
+      - name: Prepare the WebUI builder
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: webui-builder
+          tags: webui-builder
+
+      - name: Lint the WebUI
+        run: docker run --rm webui-builder npm run lint
+
+      - name: Type-check the WebUI
+        # Regenerate the Chakra UI typings first so the check reflects the project's actual
+        # theme (custom tokens/recipes), not the generic defaults shipped in node_modules,
+        # then verify typegen didn't leave anything out of sync with what's committed - i.e.
+        # that the developer regenerated (and committed) the typings themselves. Currently
+        # typegen only patches .d.ts files inside node_modules (not part of the repo), so the
+        # diff is a no-op guard today, but it'll start mattering if that ever changes.
+        run: |
+          docker run --name webui-types webui-builder sh -c "npm run chakra:typegen && npm run tsx"
+          docker cp webui-types:/build/webui/src src/main/resources/webui
+          docker rm webui-types
+          git diff --exit-code -- src/main/resources/webui
+
       - name: Prepare the builder
         uses: docker/build-push-action@v6
         with:
@@ -83,7 +106,6 @@ jobs:
           mkdir zip
           cd zip
           cp ../dist/* .
-          cp ../src/main/resources/www/LICENSE.txt .
           cp ../${{ steps.extract.outputs.destination }}/netshot.jar .
           echo ${{ steps.meta.outputs.version }} > VERSION.txt
           zip netshot_${{ steps.meta.outputs.version }}.zip *

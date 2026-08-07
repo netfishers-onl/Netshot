@@ -97,9 +97,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
+import io.undertow.io.IoCallback;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.PathHandler;
+import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
+import io.undertow.server.handlers.resource.Resource;
 import io.undertow.server.handlers.resource.ResourceHandler;
 import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
@@ -484,9 +487,25 @@ public class RestService extends Thread {
 			HttpHandler servletHandler = manager.start();
 
 			// === Static files from /www/ (classpath) ===
-			ResourceHandler staticHandler = Handlers.resource(
-				new ClassPathResourceManager(Netshot.class.getClassLoader(), "www")
-			).addWelcomeFiles("index.html");
+			ClassPathResourceManager staticResourceManager =
+				new ClassPathResourceManager(Netshot.class.getClassLoader(), "www");
+			// The WebUI uses client-side routing (React Router), so a direct request or a
+			// refresh on a route like /devices/42 won't match any file on disk. Fall back to
+			// index.html for such requests (i.e. those without a file extension), and leave
+			// genuinely missing static assets (e.g. /assets/missing.js) as real 404s.
+			HttpHandler spaFallbackHandler = exchange -> {
+				String path = exchange.getRelativePath();
+				String lastSegment = path.substring(path.lastIndexOf('/') + 1);
+				Resource index = lastSegment.contains(".") ? null : staticResourceManager.getResource("index.html");
+				if (index != null) {
+					index.serve(exchange.getResponseSender(), exchange, IoCallback.END_EXCHANGE);
+				}
+				else {
+					ResponseCodeHandler.HANDLE_404.handleRequest(exchange);
+				}
+			};
+			ResourceHandler staticHandler = new ResourceHandler(staticResourceManager, spaFallbackHandler)
+				.addWelcomeFiles("index.html");
 
 			// === Routing ===
 			PathHandler pathHandler = Handlers.path()

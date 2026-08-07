@@ -28,9 +28,16 @@
 			<resource>
 				<directory>src/main/resources</directory>
 				<excludes>
-					<!-- Exclude new WebUI files until release -->
+					<!-- WebUI sources are built separately (see below) and not shipped as-is -->
 					<exclude>webui/**</exclude>
 				</excludes>
+			</resource>
+			<resource>
+				<!-- WebUI production build (run `npm ci && npm run build` in src/main/resources/webui,
+				     or let the Docker build do it) injected at the location served by RestService's
+				     static handler -->
+				<directory>src/main/resources/webui/dist</directory>
+				<targetPath>www</targetPath>
 			</resource>
 		</resources>
 		<plugins>

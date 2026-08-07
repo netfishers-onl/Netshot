@@ -1,7 +1,16 @@
 ARG NETSHOT_VERSION=0.0.1-dev
 ARG GRAALVM_VERSION=21.0.9
+ARG NODE_VERSION=22
+ARG DEBIAN_VERSION=13
 
-FROM debian:12 AS debian-graalvm
+FROM node:${NODE_VERSION}-alpine AS webui-builder
+WORKDIR /build/webui
+COPY src/main/resources/webui/package.json src/main/resources/webui/package-lock.json ./
+RUN npm ci
+COPY src/main/resources/webui ./
+RUN npm run build
+
+FROM debian:${DEBIAN_VERSION} AS debian-graalvm
 ARG GRAALVM_VERSION
 RUN apt-get -y update && apt-get -y install wget fontconfig
 WORKDIR /usr/lib/jvm
@@ -26,6 +35,7 @@ RUN GRAALPY_VERSION=$(JAVA_HOME=/ ./mvnw help:evaluate -Dexpression=polyglot.ver
 FROM debian-graalvm-graalpy AS builder
 ARG NETSHOT_VERSION
 COPY . /build
+COPY --from=webui-builder /build/webui/dist /build/src/main/resources/webui/dist
 WORKDIR /build
 RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
        src/main/java/net/netshot/netshot/Netshot.java

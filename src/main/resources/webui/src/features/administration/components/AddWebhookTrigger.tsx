@@ -3,7 +3,7 @@ import { NetshotError } from "@/api/httpClient"
 import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
-import { Hook } from "@/types"
+import { Hook, HttpsCaTrustMode } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
@@ -30,7 +30,8 @@ export default function AddWebhookTrigger({ children, ...rest }: AddWebhookTrigg
       enabled: true,
       action: webhookDataTypeOptions.getFirst().value,
       url: "",
-      sslValidation: true,
+      httpsCaTrustMode: HttpsCaTrustMode.SystemTruststore,
+      httpsCustomCaCertificate: "",
       triggers: [],
     },
   })
@@ -59,7 +60,8 @@ export default function AddWebhookTrigger({ children, ...rest }: AddWebhookTrigg
           action: values.action,
           url: values.url,
           enabled: values.enabled,
-          sslValidation: values.sslValidation,
+          httpsCaTrustMode: values.httpsCaTrustMode,
+          httpsCustomCaCertificate: values.httpsCustomCaCertificate,
           triggers: values.triggers,
           type: "Web",
         })

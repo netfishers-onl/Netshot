@@ -33,6 +33,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.utils.HttpsCaTrustMode;
 import net.netshot.netshot.work.TaskContext;
 
 /**
@@ -314,10 +315,9 @@ public class AccessManager {
 	 */
 	public void applyHttpsTrustPolicy(AccessDefinition accessDef, Http http) {
 		DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
-		DeviceAccess.HttpsCaTrustMode mode = access == null ? null : access.getHttpsCaTrustMode();
+		HttpsCaTrustMode mode = access == null ? null : access.getHttpsCaTrustMode();
 		String customCa = access == null ? null : access.getHttpsCustomCaCertificate();
-		boolean verifyHostname = access == null || access.isHttpsVerifyHostname();
-		http.applyTrustPolicy(mode, customCa, verifyHostname);
+		http.applyTrustPolicy(mode, customCa);
 	}
 
 	/**

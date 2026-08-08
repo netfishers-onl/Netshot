@@ -2,12 +2,13 @@ import api from "@/api"
 import { DataTable, EmptyResult, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
-import { Hook } from "@/types"
+import { Hook, HttpsCaTrustMode } from "@/types"
 import { search } from "@/utils"
 import {
   Button,
   Checkbox,
   Heading,
+  Icon,
   IconButton,
   Skeleton,
   Spacer,
@@ -17,7 +18,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuShieldOff, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddWebhookTrigger from "../components/AddWebhookTrigger"
 import EditWebhookTrigger from "../components/EditWebhookTrigger"
@@ -26,6 +27,14 @@ import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<Hook>()
+
+/** HTTPS with the certificate (and hostname) actually verified - anything else (plain HTTP, or TRUST_ANY) is "not secured". */
+function isConnectionSecured(webhook: Hook): boolean {
+  return (
+    webhook.url?.toLowerCase().startsWith("https://") === true &&
+    webhook.httpsCaTrustMode !== HttpsCaTrustMode.TrustAny
+  )
+}
 
 export default function AdministrationApiTokenScreen() {
   const { t } = useTranslation()
@@ -70,7 +79,21 @@ export default function AdministrationApiTokenScreen() {
         },
       }),
       columnHelper.accessor("url", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => {
+          const webhook = info.row.original
+          return (
+            <Stack direction="row" gap="2" alignItems="center">
+              <Text>{info.getValue()}</Text>
+              {!isConnectionSecured(webhook) && (
+                <Tooltip content={t("webhook.connectionNotSecured")}>
+                  <Icon color="red.500" size="sm" flexShrink={0}>
+                    <LuShieldOff />
+                  </Icon>
+                </Tooltip>
+              )}
+            </Stack>
+          )
+        },
         header: t("common.url"),
         enableSorting: true,
       }),

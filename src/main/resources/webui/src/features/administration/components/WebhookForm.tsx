@@ -1,7 +1,7 @@
 import { FormControl, Switch } from "@/components"
 import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
-import { HookActionType, HookTrigger } from "@/types"
+import { HookActionType, HookTrigger, HttpsCaTrustMode } from "@/types"
 import { Badge, Heading, Switch as NativeSwitch, Separator, Stack, Text } from "@chakra-ui/react"
 import { Fragment, useCallback } from "react"
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form"
@@ -12,11 +12,30 @@ export type WebhookForm = {
   name: string
   enabled: boolean
   action: HookActionType
-  sslValidation: boolean
+  httpsCaTrustMode: HttpsCaTrustMode
+  httpsCustomCaCertificate: string
   triggers: HookTrigger[]
   type: string
   url: string
 }
+
+const HTTPS_CA_TRUST_MODE_OPTIONS = [
+  {
+    label: "device.httpsCaTrustModeSystemTruststore",
+    description: "device.httpsCaTrustModeSystemTruststoreDescription",
+    value: HttpsCaTrustMode.SystemTruststore,
+  },
+  {
+    label: "device.httpsCaTrustModeCustomCa",
+    description: "device.httpsCaTrustModeCustomCaDescription",
+    value: HttpsCaTrustMode.CustomCa,
+  },
+  {
+    label: "device.httpsCaTrustModeTrustAny",
+    description: "device.httpsCaTrustModeTrustAnyDescription",
+    value: HttpsCaTrustMode.TrustAny,
+  },
+] as const
 
 export default function WebhookForm() {
   const form = useFormContext<WebhookForm>()
@@ -27,6 +46,11 @@ export default function WebhookForm() {
   const enabled = useWatch({
     control: form.control,
     name: "enabled",
+  })
+
+  const httpsCaTrustMode = useWatch({
+    control: form.control,
+    name: "httpsCaTrustMode",
   })
 
   const triggers = useFieldArray({
@@ -92,12 +116,30 @@ export default function WebhookForm() {
           <Switch w="initial" control={form.control} name="enabled" showStateIcon />
         </Stack>
         <Separator />
-        <Stack direction="row" gap="6">
-          <Stack gap="0" flex="1">
-            <Text fontWeight="medium">{t("webhook.sslValidation")}</Text>
-            <Text color="grey.400">{t("webhook.disablingSslValidationIsNotSecure")}</Text>
-          </Stack>
-          <Switch w="initial" control={form.control} name="sslValidation" />
+        <Stack direction="column" gap="3">
+          <Select
+            label={t("device.httpsCaTrustMode")}
+            control={form.control}
+            name="httpsCaTrustMode"
+            options={HTTPS_CA_TRUST_MODE_OPTIONS.map((option) => ({
+              label: t(option.label),
+              description: t(option.description),
+              value: option.value,
+            }))}
+          />
+          {httpsCaTrustMode === HttpsCaTrustMode.CustomCa && (
+            <FormControl
+              autosize
+              mono
+              clearable
+              rows={4}
+              type={FormControlType.LongText}
+              label={t("device.httpsCustomCaCertificate")}
+              placeholder={t("device.httpsCustomCaCertificatePlaceholder")}
+              control={form.control}
+              name="httpsCustomCaCertificate"
+            />
+          )}
         </Stack>
       </Stack>
       <Stack gap="6">

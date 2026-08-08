@@ -109,7 +109,6 @@ export type DeviceAccess = {
   sshTrustedHostKeysSince?: number
   httpsCaTrustMode?: HttpsCaTrustMode
   httpsCustomCaCertificate?: string
-  httpsVerifyHostname?: boolean
 }
 
 export type Device = {

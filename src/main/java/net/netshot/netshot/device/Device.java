@@ -541,7 +541,6 @@ public class Device {
 			}
 			access.setHttpsCaTrustMode(input.getHttpsCaTrustMode());
 			access.setHttpsCustomCaCertificate(input.getHttpsCustomCaCertificate());
-			access.setHttpsVerifyHostname(input.isHttpsVerifyHostname());
 		}
 	}
 

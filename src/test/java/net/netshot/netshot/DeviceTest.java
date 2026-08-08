@@ -71,6 +71,7 @@ import net.netshot.netshot.diagnostic.DiagnosticBinaryResult;
 import net.netshot.netshot.diagnostic.DiagnosticNumericResult;
 import net.netshot.netshot.diagnostic.DiagnosticTextResult;
 import net.netshot.netshot.diagnostic.SimpleDiagnostic;
+import net.netshot.netshot.utils.HttpsCaTrustMode;
 
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -1596,9 +1597,8 @@ public class DeviceTest extends WithDatabaseTest {
 			sshIncoming.setSshHostKeyVerification(DeviceAccess.SshHostKeyVerification.TRUST_KNOWN);
 			sshIncoming.setSshTrustedHostKeys("ssh-ed25519 AAAAKEY");
 			DeviceAccess httpsIncoming = new DeviceAccess(device, "https");
-			httpsIncoming.setHttpsCaTrustMode(DeviceAccess.HttpsCaTrustMode.CUSTOM_CA);
+			httpsIncoming.setHttpsCaTrustMode(HttpsCaTrustMode.CUSTOM_CA);
 			httpsIncoming.setHttpsCustomCaCertificate("-----BEGIN CERTIFICATE-----FAKE-----END CERTIFICATE-----");
-			httpsIncoming.setHttpsVerifyHostname(false);
 
 			device.replaceAccesses(List.of(sshIncoming, httpsIncoming));
 
@@ -1609,10 +1609,9 @@ public class DeviceTest extends WithDatabaseTest {
 				"Setting a trusted key for the first time should stamp 'since'");
 
 			DeviceAccess httpsAccess = device.getDeviceAccess("https");
-			Assertions.assertEquals(DeviceAccess.HttpsCaTrustMode.CUSTOM_CA, httpsAccess.getHttpsCaTrustMode());
+			Assertions.assertEquals(HttpsCaTrustMode.CUSTOM_CA, httpsAccess.getHttpsCaTrustMode());
 			Assertions.assertEquals("-----BEGIN CERTIFICATE-----FAKE-----END CERTIFICATE-----",
 				httpsAccess.getHttpsCustomCaCertificate());
-			Assertions.assertFalse(httpsAccess.isHttpsVerifyHostname());
 		}
 
 		@Test

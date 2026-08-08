@@ -42,7 +42,6 @@ export type DeviceAccessFormValue = {
   sshTrustedHostKeys: string
   httpsCaTrustMode: HttpsCaTrustMode
   httpsCustomCaCertificate: string
-  httpsVerifyHostname: boolean
 }
 
 export type DeviceAccessFieldsProps = {
@@ -666,12 +665,6 @@ function AccessRow({
                       name={`accesses.${index}.httpsCustomCaCertificate`}
                     />
                   )}
-                  <Switch
-                    control={control}
-                    name={`accesses.${index}.httpsVerifyHostname`}
-                    label={t("device.httpsVerifyHostname")}
-                    description={t("device.httpsVerifyHostnameDescription")}
-                  />
                 </Stack>
               )}
             </>
@@ -736,7 +729,6 @@ export default function DeviceAccessFields({ control, accessDefinitions, bulk = 
           sshTrustedHostKeys: existing?.sshTrustedHostKeys ?? "",
           httpsCaTrustMode: existing?.httpsCaTrustMode ?? HttpsCaTrustMode.SystemTruststore,
           httpsCustomCaCertificate: existing?.httpsCustomCaCertificate ?? "",
-          httpsVerifyHostname: existing?.httpsVerifyHostname ?? true,
         }
       })
     )
@@ -886,7 +878,6 @@ export function buildAccessesPayload(
     if (access.protocol === DeviceTypeProtocol.Https) {
       entry.httpsCaTrustMode = access.httpsCaTrustMode
       entry.httpsCustomCaCertificate = access.httpsCustomCaCertificate || undefined
-      entry.httpsVerifyHostname = access.httpsVerifyHostname
     }
     if (access.mode === "global" && access.globalCredentialSetId
         && access.globalCredentialSetId !== TRY_ALL_CREDENTIALS_VALUE) {

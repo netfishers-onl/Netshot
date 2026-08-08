@@ -218,6 +218,7 @@ import net.netshot.netshot.hooks.HookTrigger;
 import net.netshot.netshot.hooks.WebHook;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.RestApiView;
+import net.netshot.netshot.utils.HttpsCaTrustMode;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.Task.ScheduleType;
@@ -2024,16 +2025,17 @@ public class RestService extends Thread {
 			access.setSshTrustedHostKeys(
 				RestService.normalizeSshTrustedHostKeys(access.getSshTrustedHostKeys(), access.getAccessName()));
 			if (access.getHttpsCaTrustMode() == null) {
-				access.setHttpsCaTrustMode(DeviceAccess.HttpsCaTrustMode.SYSTEM_TRUSTSTORE);
+				access.setHttpsCaTrustMode(HttpsCaTrustMode.SYSTEM_TRUSTSTORE);
 			}
-			if (access.getHttpsCaTrustMode() == DeviceAccess.HttpsCaTrustMode.CUSTOM_CA) {
+			if (access.getHttpsCaTrustMode() == HttpsCaTrustMode.CUSTOM_CA) {
 				if (access.getHttpsCustomCaCertificate() == null || access.getHttpsCustomCaCertificate().isBlank()) {
 					throw new NetshotBadRequestException(
 						"Access '" + access.getAccessName() + "' requires a custom CA certificate "
 							+ "when the HTTPS trust mode is CUSTOM_CA.",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 				}
-				RestService.validateHttpsCustomCaCertificate(access.getHttpsCustomCaCertificate(), access.getAccessName());
+				RestService.validateHttpsCustomCaCertificate(access.getHttpsCustomCaCertificate(),
+					"access '" + access.getAccessName() + "'");
 			}
 			if (access.getGlobalCredentialSet() == null && access.getSpecificCredentialSet() == null) {
 				continue;
@@ -2133,10 +2135,10 @@ public class RestService extends Thread {
 	/**
 	 * Validates that a posted custom CA block parses as at least one X.509 certificate.
 	 * @param pem the PEM-encoded certificate(s)
-	 * @param accessName the access name (for the error message)
+	 * @param context what the certificate belongs to, e.g. "access 'https'" or "the webhook" (for the error message)
 	 * @throws NetshotBadRequestException if the block is malformed or empty
 	 */
-	private static void validateHttpsCustomCaCertificate(String pem, String accessName) throws NetshotBadRequestException {
+	private static void validateHttpsCustomCaCertificate(String pem, String context) throws NetshotBadRequestException {
 		try {
 			CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
 			Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(
@@ -2147,8 +2149,29 @@ public class RestService extends Thread {
 		}
 		catch (Exception e) {
 			throw new NetshotBadRequestException(
-				"Invalid custom CA certificate for access '" + accessName + "': " + e.getMessage(),
+				"Invalid custom CA certificate for " + context + ": " + e.getMessage(),
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+		}
+	}
+
+	/**
+	 * Validates a Web hook's HTTPS trust policy: defaults a missing CA trust
+	 * mode to {@code SYSTEM_TRUSTSTORE}, and requires/validates a custom CA
+	 * certificate when the mode is {@code CUSTOM_CA}.
+	 * @param webHook the Web hook to validate
+	 * @throws NetshotBadRequestException if the CUSTOM_CA mode is selected without a valid certificate
+	 */
+	private static void validateWebHookTrustPolicy(WebHook webHook) throws NetshotBadRequestException {
+		if (webHook.getHttpsCaTrustMode() == null) {
+			webHook.setHttpsCaTrustMode(HttpsCaTrustMode.SYSTEM_TRUSTSTORE);
+		}
+		if (webHook.getHttpsCaTrustMode() == HttpsCaTrustMode.CUSTOM_CA) {
+			if (webHook.getHttpsCustomCaCertificate() == null || webHook.getHttpsCustomCaCertificate().isBlank()) {
+				throw new NetshotBadRequestException(
+					"The webhook requires a custom CA certificate when the HTTPS trust mode is CUSTOM_CA.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+			}
+			RestService.validateHttpsCustomCaCertificate(webHook.getHttpsCustomCaCertificate(), "the webhook");
 		}
 	}
 
@@ -10261,6 +10284,7 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Invalid action",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_WEB);
 			}
+			RestService.validateWebHookTrustPolicy(webHook);
 		}
 		Session session = Database.getSession();
 		try {
@@ -10371,6 +10395,7 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Invalid action",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_WEB);
 			}
+			RestService.validateWebHookTrustPolicy(rsWebHook);
 		}
 		{
 			Session session = Database.getSession();
@@ -10401,7 +10426,8 @@ public class RestService extends Thread {
 						&& hook instanceof WebHook webHook) {
 					webHook.setAction(rsWebHook.getAction());
 					webHook.setUrl(rsWebHook.getUrl());
-					webHook.setSslValidation(rsWebHook.isSslValidation());
+					webHook.setHttpsCaTrustMode(rsWebHook.getHttpsCaTrustMode());
+					webHook.setHttpsCustomCaCertificate(rsWebHook.getHttpsCustomCaCertificate());
 				}
 				session.merge(hook);
 				session.getTransaction().commit();

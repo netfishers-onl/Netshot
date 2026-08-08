@@ -27,7 +27,8 @@ export default function EditWebhookTrigger({ webhook, children, ...rest }: EditW
       enabled: webhook.enabled,
       action: webhook.action,
       url: webhook.url,
-      sslValidation: webhook.sslValidation,
+      httpsCaTrustMode: webhook.httpsCaTrustMode,
+      httpsCustomCaCertificate: webhook.httpsCustomCaCertificate ?? "",
       triggers: webhook.triggers,
     }
   }, [webhook])
@@ -61,7 +62,8 @@ export default function EditWebhookTrigger({ webhook, children, ...rest }: EditW
           action: values.action,
           url: values.url,
           enabled: values.enabled,
-          sslValidation: values.sslValidation,
+          httpsCaTrustMode: values.httpsCaTrustMode,
+          httpsCustomCaCertificate: values.httpsCustomCaCertificate,
           triggers: values.triggers,
           type: "Web",
         })

@@ -1979,4 +1979,49 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	<changeSet author="netshot" id="0.25.0_37">
+		<!-- Web hook HTTPS trust policy, aligned with the (device, access) one
+			added in 0.25.0_36, replacing the single ssl_validation boolean.
+			There is no independent hostname-verification toggle: TRUST_ANY
+			disables certificate verification in every respect, hostname
+			included, since checking the hostname alone (without a trusted
+			certificate chain) offers no real protection against an active
+			attacker. Existing rows are migrated so already-configured
+			webhooks keep behaving the same: ssl_validation = true (the
+			previous default) becomes SYSTEM_TRUSTSTORE; ssl_validation =
+			false becomes TRUST_ANY, i.e. the previous accept-all behavior. -->
+		<addColumn tableName="web_hook">
+			<column name="https_ca_trust_mode" type="VARCHAR(255)" value="SYSTEM_TRUSTSTORE">
+				<constraints nullable="false"/>
+			</column>
+			<column name="https_custom_ca_certificate" type="LONGTEXT"/>
+		</addColumn>
+		<sql>
+			UPDATE web_hook
+			SET https_ca_trust_mode = 'TRUST_ANY'
+			WHERE ssl_validation = false;
+		</sql>
+		<dropColumn tableName="web_hook">
+			<column name="ssl_validation"/>
+		</dropColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_38">
+		<!-- Drop the independent https_verify_hostname toggle added in
+			0.25.0_36: hostname verification is no longer a separate setting,
+			it is now implied by https_ca_trust_mode (on for SYSTEM_TRUSTSTORE/
+			CUSTOM_CA, off for TRUST_ANY - see HttpsCaTrustMode/HttpsTrustPolicy).
+			A row that had disabled hostname verification while keeping a
+			"real" trust mode (SYSTEM_TRUSTSTORE/CUSTOM_CA) can no longer
+			express that combination - it is migrated to TRUST_ANY so the
+			access keeps connecting after the upgrade, rather than starting to
+			fail a hostname check it was explicitly configured to skip. -->
+		<sql>
+			UPDATE device_access
+			SET https_ca_trust_mode = 'TRUST_ANY'
+			WHERE https_verify_hostname = false AND https_ca_trust_mode != 'TRUST_ANY';
+		</sql>
+		<dropColumn tableName="device_access">
+			<column name="https_verify_hostname"/>
+		</dropColumn>
+	</changeSet>
 </databaseChangeLog>

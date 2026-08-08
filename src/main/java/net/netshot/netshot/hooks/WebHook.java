@@ -22,12 +22,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.SecureRandom;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -42,7 +42,10 @@ import com.fasterxml.jackson.jakarta.rs.xml.JacksonXmlBindXMLProvider;
 import com.fasterxml.jackson.jakarta.rs.yaml.JacksonXmlBindYAMLProvider;
 import com.fasterxml.jackson.jakarta.rs.yaml.YAMLMediaTypes;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -53,8 +56,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.rest.RestViews.RestApiView;
-import net.netshot.netshot.utils.InsecureHostnameVerifier;
-import net.netshot.netshot.utils.InsecureTrustManager;
+import net.netshot.netshot.utils.HttpsCaTrustMode;
+import net.netshot.netshot.utils.HttpsTrustPolicy;
 
 /**
  * A Web hook, called after specific event.
@@ -96,8 +99,15 @@ public class WebHook extends Hook {
 	/** The target http URL. */
 	private String url;
 
-	/** Enable/disable SSL validation for https links. */
-	private boolean sslValidation = true;
+	/** HTTPS certificate CA trust mode (only meaningful for a HTTPS target URL). */
+	private HttpsCaTrustMode httpsCaTrustMode = HttpsCaTrustMode.SYSTEM_TRUSTSTORE;
+
+	/**
+	 * PEM-encoded trust anchor certificate (optionally a chain of several
+	 * concatenated PEM certificates) used when {@link #httpsCaTrustMode} is
+	 * {@link HttpsCaTrustMode#CUSTOM_CA}.
+	 */
+	private String httpsCustomCaCertificate;
 
 	/**
 	 * Instantiates a new web hook.
@@ -132,14 +142,27 @@ public class WebHook extends Hook {
 		}
 	}
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	@XmlElement
 	@JsonView(DefaultView.class)
-	public boolean isSslValidation() {
-		return sslValidation;
+	public HttpsCaTrustMode getHttpsCaTrustMode() {
+		return httpsCaTrustMode;
 	}
 
-	public void setSslValidation(boolean sslValidation) {
-		this.sslValidation = sslValidation;
+	public void setHttpsCaTrustMode(HttpsCaTrustMode httpsCaTrustMode) {
+		this.httpsCaTrustMode = httpsCaTrustMode;
+	}
+
+	@Column(columnDefinition = "TEXT")
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public String getHttpsCustomCaCertificate() {
+		return httpsCustomCaCertificate;
+	}
+
+	public void setHttpsCustomCaCertificate(String httpsCustomCaCertificate) {
+		this.httpsCustomCaCertificate = httpsCustomCaCertificate;
 	}
 
 	@XmlElement
@@ -190,20 +213,19 @@ public class WebHook extends Hook {
 				throw new Exception("Invalid action");
 		}
 
-		TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-		factory.init((KeyStore) null);
-
-		SSLContext sslContext = SSLContext.getInstance("TLS");
-		if (this.isSslValidation()) {
-			sslContext.init(null, null, new SecureRandom());
-		}
-		else {
-			sslContext.init(null, new TrustManager[] { new InsecureTrustManager() }, new SecureRandom());
-		}
-
-		ClientBuilder clientBuilder = ClientBuilder.newBuilder().sslContext(sslContext);
-		if (!this.isSslValidation()) {
-			clientBuilder.hostnameVerifier(new InsecureHostnameVerifier());
+		ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+		if ("https".equals(targetUrl.getProtocol())) {
+			try {
+				SSLContext sslContext = HttpsTrustPolicy.buildSslContext(this.httpsCaTrustMode, this.httpsCustomCaCertificate);
+				clientBuilder.sslContext(sslContext);
+				HostnameVerifier hostnameVerifier = HttpsTrustPolicy.buildHostnameVerifier(this.httpsCaTrustMode);
+				if (hostnameVerifier != null) {
+					clientBuilder.hostnameVerifier(hostnameVerifier);
+				}
+			}
+			catch (GeneralSecurityException | java.io.IOException e) {
+				throw new Exception("Unable to initialize the HTTPS trust policy for the webhook: " + e.getMessage(), e);
+			}
 		}
 		clientBuilder.withConfig(config);
 

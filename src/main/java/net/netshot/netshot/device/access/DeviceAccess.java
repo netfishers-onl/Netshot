@@ -49,6 +49,7 @@ import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.utils.HttpsCaTrustMode;
 
 /**
  * Per-(device, access) configuration: an optional address and/or TCP port
@@ -91,19 +92,6 @@ public final class DeviceAccess {
 		 * silently learned in addition to an existing one).
 		 */
 		TRUST_KNOWN
-	}
-
-	/**
-	 * HTTPS server certificate CA trust mode for this access (meaningful only
-	 * when the access's protocol is HTTPS).
-	 */
-	public enum HttpsCaTrustMode {
-		/** No CA verification - any server certificate is accepted (historical behavior). */
-		TRUST_ANY,
-		/** The JVM's default (system) trust store is used. */
-		SYSTEM_TRUSTSTORE,
-		/** Only {@link #httpsCustomCaCertificate} (and certificates it issued) is trusted. */
-		CUSTOM_CA
 	}
 
 	/** The composite primary key: (device, accessName). */
@@ -253,17 +241,6 @@ public final class DeviceAccess {
 	}))
 	@Setter
 	private String httpsCustomCaCertificate;
-
-	/**
-	 * Whether to verify the server certificate's CN/SAN against the
-	 * connection hostname, independently of {@link #httpsCaTrustMode}.
-	 */
-	@Getter(onMethod = @__({
-		@Column(name = "https_verify_hostname", nullable = false),
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private boolean httpsVerifyHostname = true;
 
 	/**
 	 * Instantiates a new device access.

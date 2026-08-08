@@ -1,3 +1,4 @@
+import { HttpsCaTrustMode } from "./device";
 import { TaskType } from "./task";
 
 export enum HookTriggerType {
@@ -21,6 +22,7 @@ export type Hook = {
   enabled: boolean;
   triggers: HookTrigger[];
   type: string;
-  sslValidation: boolean;
+  httpsCaTrustMode: HttpsCaTrustMode;
+  httpsCustomCaCertificate?: string;
   url: string;
 };

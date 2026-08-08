@@ -112,7 +112,6 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
         sshTrustedHostKeys: access?.sshTrustedHostKeys ?? "",
         httpsCaTrustMode: access?.httpsCaTrustMode ?? HttpsCaTrustMode.SystemTruststore,
         httpsCustomCaCertificate: access?.httpsCustomCaCertificate ?? "",
-        httpsVerifyHostname: access?.httpsVerifyHostname ?? true,
       }
     }) as DeviceAccessFormValue[]
 

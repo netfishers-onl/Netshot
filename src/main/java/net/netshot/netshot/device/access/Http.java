@@ -18,28 +18,19 @@
  */
 package net.netshot.netshot.device.access;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.client.ClientConfig;
@@ -64,10 +55,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.access.DeviceAccess.HttpsCaTrustMode;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
-import net.netshot.netshot.utils.InsecureHostnameVerifier;
-import net.netshot.netshot.utils.InsecureTrustManager;
+import net.netshot.netshot.utils.HttpsCaTrustMode;
+import net.netshot.netshot.utils.HttpsTrustPolicy;
 import net.netshot.netshot.work.TaskContext;
 
 /**
@@ -210,9 +200,6 @@ public class Http implements Client {
 	/** PEM-encoded trust anchor certificate(s), used when {@link #caTrustMode} is {@code CUSTOM_CA}. */
 	private String customCaCertificate;
 
-	/** Whether to verify the presented certificate's CN/SAN against {@link #host}. */
-	private boolean verifyHostname = true;
-
 	/**
 	 * Instantiates a new HTTP access.
 	 * @param host the target host (IPv4/IPv6 literal or FQDN)
@@ -234,51 +221,10 @@ public class Http implements Client {
 	 * @param caTrustMode the CA trust mode (defaults to {@code SYSTEM_TRUSTSTORE} if null)
 	 * @param customCaCertificate the PEM-encoded trust anchor certificate(s), used when
 	 *        {@code caTrustMode} is {@code CUSTOM_CA}
-	 * @param verifyHostname whether to verify the presented certificate's CN/SAN against the host
 	 */
-	public void applyTrustPolicy(HttpsCaTrustMode caTrustMode, String customCaCertificate, boolean verifyHostname) {
+	public void applyTrustPolicy(HttpsCaTrustMode caTrustMode, String customCaCertificate) {
 		this.caTrustMode = caTrustMode == null ? HttpsCaTrustMode.SYSTEM_TRUSTSTORE : caTrustMode;
 		this.customCaCertificate = customCaCertificate;
-		this.verifyHostname = verifyHostname;
-	}
-
-	/**
-	 * Builds the trust managers reflecting {@link #caTrustMode}.
-	 * @return the trust managers to pass to {@link SSLContext#init}, or null to fall back to the
-	 *         JVM's default (system truststore) trust managers
-	 * @throws GeneralSecurityException if the custom CA certificate(s) cannot be loaded
-	 * @throws IOException if the in-memory trust {@link KeyStore} cannot be initialized
-	 */
-	private TrustManager[] buildTrustManagers() throws GeneralSecurityException, IOException {
-		switch (this.caTrustMode) {
-			case TRUST_ANY:
-				return new TrustManager[] { new InsecureTrustManager() };
-			case CUSTOM_CA:
-				if (this.customCaCertificate == null || this.customCaCertificate.isBlank()) {
-					throw new CertificateException(
-						"No custom CA certificate configured for this access, despite CUSTOM_CA trust mode.");
-				}
-				KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-				trustStore.load(null, null);
-				CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-				Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(
-					new ByteArrayInputStream(this.customCaCertificate.getBytes(StandardCharsets.UTF_8)));
-				if (certificates.isEmpty()) {
-					throw new CertificateException("No certificate found in the configured custom CA.");
-				}
-				int i = 0;
-				for (Certificate certificate : certificates) {
-					trustStore.setCertificateEntry("ca" + (i++), certificate);
-				}
-				TrustManagerFactory trustManagerFactory =
-					TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-				trustManagerFactory.init(trustStore);
-				return trustManagerFactory.getTrustManagers();
-			case SYSTEM_TRUSTSTORE:
-			default:
-				// null trust managers => SSLContext.init falls back to the JVM's default (system) ones
-				return null;
-		}
 	}
 
 	@Override
@@ -290,11 +236,11 @@ public class Http implements Client {
 			ClientConfig config = new ClientConfig();
 			ClientBuilder builder = ClientBuilder.newBuilder().withConfig(config);
 			if (this.tls) {
-				SSLContext sslContext = SSLContext.getInstance("TLS");
-				sslContext.init(null, this.buildTrustManagers(), new SecureRandom());
+				SSLContext sslContext = HttpsTrustPolicy.buildSslContext(this.caTrustMode, this.customCaCertificate);
 				builder.sslContext(sslContext);
-				if (!this.verifyHostname) {
-					builder.hostnameVerifier(new InsecureHostnameVerifier());
+				HostnameVerifier hostnameVerifier = HttpsTrustPolicy.buildHostnameVerifier(this.caTrustMode);
+				if (hostnameVerifier != null) {
+					builder.hostnameVerifier(hostnameVerifier);
 				}
 			}
 			this.jerseyClient = builder.build();

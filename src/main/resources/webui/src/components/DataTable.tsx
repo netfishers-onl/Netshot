@@ -363,7 +363,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                     <SimpleRow
                       row={row}
                       onClick={() => onClickRow?.(row.original, data)}
-                      cursor="pointer"
+                      cursor={onClickRow ? "pointer" : undefined}
                     />
                   )}
                 </Fragment>

@@ -441,7 +441,7 @@ export function VirtualizedDataTableBody<T>({
             virtualRow={virtualRow}
             rowVirtualizer={rowVirtualizer}
             onClick={() => onClickRow?.(row.original, data)}
-            cursor="pointer"
+            cursor={onClickRow ? "pointer" : undefined}
           />
         )
       })}

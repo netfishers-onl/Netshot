@@ -9,7 +9,8 @@ export const QUERIES = {
 
 export const SCRIPT_TEMPLATES = {
   [DiagnosticType.Javascript]: `
-    function diagnose(cli, device, diagnostic) {
+    function diagnose(client, device, diagnostic) {
+      const cli = client.create("cli");
       cli.macro("enable");
       const output = cli.command("show something");
       // Process output somewhat
@@ -17,7 +18,8 @@ export const SCRIPT_TEMPLATES = {
     }
   `,
   [DiagnosticType.Python]: `
-    def diagnose(cli, device, diagnostic):
+    def diagnose(client, device, diagnostic):
+      cli = client.create("cli")
       cli.macro("enable")
       output = cli.command("show something")
       # Process output somewhat

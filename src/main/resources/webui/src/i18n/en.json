@@ -249,7 +249,8 @@
       "aboutToRemove": "You are about to remove the diagnostic {{diagnosticName}}",
       "canCreate": "You can create diagnostics then execute them on this device",
       "selectResultType": "Select a result type",
-      "select": "Select diagnostic"
+      "select": "Select diagnostic",
+      "noCliAccessForDriver": "This device type has no CLI access. Use a JavaScript or Python diagnostic instead (with client.create(\"http\") if the driver is HTTP-based)."
     },
     "time": {
       "day_one": "day",

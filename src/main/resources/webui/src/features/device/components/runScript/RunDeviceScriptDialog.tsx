@@ -11,8 +11,9 @@ import { ScheduleFormType } from "@/components/ScheduleForm"
 import { TaskDialog } from "@/features/task/components"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useCustomDialog, useDialogConfig } from "@/dialog"
+import { useDeviceTypeOptions } from "@/features/device/hooks"
 import { useToast } from "@/hooks"
-import { Device, Script, ScriptUserInputDefinition, SimpleDevice, TaskType } from "@/types"
+import { Device, DeviceTypeProtocol, Script, ScriptUserInputDefinition, SimpleDevice, TaskType } from "@/types"
 import {
   Badge,
   Box,
@@ -35,7 +36,7 @@ import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form
 import { LuFileTerminal, LuMinimize2, LuPencil, LuPlus, LuSave } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { DeviceNamesPreview } from "@/features/device/components"
-import { NEW_SCRIPT_TEMPLATE } from "./constants"
+import { NEW_HTTP_SCRIPT_TEMPLATE, NEW_SCRIPT_TEMPLATE } from "./constants"
 import LoadScriptButton from "./LoadScriptButton"
 import SaveScriptDialog from "./SaveScriptDialog"
 
@@ -299,6 +300,8 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
     },
   })
 
+  const { getOptionByDriver } = useDeviceTypeOptions()
+
   const scriptValue = useWatch({ control: form.control, name: "script" })
   const driverValue = useWatch({ control: form.control, name: "driver" })
   const isDirty = scriptMeta != null && scriptValue !== originalContent
@@ -330,10 +333,15 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
   }
 
   function writeNewScript() {
-    form.setValue("script", NEW_SCRIPT_TEMPLATE, { shouldValidate: true })
+    const protocols = getOptionByDriver(driverValue)?.value?.protocols ?? []
+    const hasCliAccess = protocols.includes(DeviceTypeProtocol.Ssh) || protocols.includes(DeviceTypeProtocol.Telnet)
+    const hasHttpAccess = protocols.includes(DeviceTypeProtocol.Http) || protocols.includes(DeviceTypeProtocol.Https)
+    const template = !hasCliAccess && hasHttpAccess ? NEW_HTTP_SCRIPT_TEMPLATE : NEW_SCRIPT_TEMPLATE
+
+    form.setValue("script", template, { shouldValidate: true })
     setScriptMeta(null)
     setIsNewScript(true)
-    setOriginalContent(NEW_SCRIPT_TEMPLATE)
+    setOriginalContent(template)
     expand()
   }
 

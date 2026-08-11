@@ -249,7 +249,8 @@
       "aboutToRemove": "Vous êtes sur le point de supprimer le diagnostic {{diagnosticName}}",
       "canCreate": "Vous pouvez créer des diagnostics puis les exécuter sur cet équipement",
       "selectResultType": "Sélectionner un type de résultat",
-      "select": "Sélectionner un diagnostic"
+      "select": "Sélectionner un diagnostic",
+      "noCliAccessForDriver": "Ce type d'équipement n'a pas d'accès CLI. Utilisez un diagnostic JavaScript ou Python à la place (avec client.create(\"http\") si le pilote est basé sur HTTP)."
     },
     "time": {
       "day_one": "jour",

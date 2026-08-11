@@ -55,6 +55,11 @@ export default function EditDiagnosticTextFields(props: StackProps) {
         name="cliMode"
         label={t("network.cliMode")}
         placeholder={t("network.selectCliMode")}
+        helperText={
+          deviceDriver && cliModeOptions.length === 0
+            ? t("diagnostic.noCliAccessForDriver")
+            : undefined
+        }
       />
       <FormControl
         required

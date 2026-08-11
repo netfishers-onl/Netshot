@@ -10,7 +10,7 @@
 		<polyglot.version>24.1.2</polyglot.version>
 		<hibernate.version>6.6.55.Final</hibernate.version>
 		<c3p0.version>0.14.1</c3p0.version>
-		<undertow.version>2.3.26.Final</undertow.version>
+		<undertow.version>2.4.2.Final</undertow.version>
 		<jackson.version>2.22.1</jackson.version>
 		<jersey.version>4.0.2</jersey.version>
 		<swagger.version>2.2.53</swagger.version>
@@ -318,7 +318,7 @@
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-servlet</artifactId>
-			<version>${undertow.version}</version>
+			<version>2.3.26.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
@@ -373,7 +373,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.6.1</version>
+			<version>1.6.2</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -516,7 +516,7 @@
 			<groupId>com.nimbusds</groupId>
 			<artifactId>oauth2-oidc-sdk</artifactId>
 			<classifier>jdk11</classifier>
-			<version>11.37.2</version>
+			<version>11.38.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.sshd</groupId>

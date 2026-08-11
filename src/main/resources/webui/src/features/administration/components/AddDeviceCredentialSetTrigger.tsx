@@ -39,6 +39,20 @@ export default function AddDeviceCredentialSetTrigger({ children, ...rest }: Add
       password: "",
       superPassword: "",
       privateKey: "",
+      usernameVaultInstanceId: null,
+      usernameVaultPath: "",
+      passwordVaultInstanceId: null,
+      passwordVaultPath: "",
+      superPasswordVaultInstanceId: null,
+      superPasswordVaultPath: "",
+      privateKeyVaultInstanceId: null,
+      privateKeyVaultPath: "",
+      communityVaultInstanceId: null,
+      communityVaultPath: "",
+      authKeyVaultInstanceId: null,
+      authKeyVaultPath: "",
+      privKeyVaultInstanceId: null,
+      privKeyVaultPath: "",
     },
   })
 
@@ -72,6 +86,8 @@ export default function AddDeviceCredentialSetTrigger({ children, ...rest }: Add
           payload = {
             ...payload,
             community: values.community ?? undefined,
+            communityVaultInstanceId: values.communityVaultInstanceId,
+            communityVaultPath: values.communityVaultPath,
           }
         }
 
@@ -85,31 +101,55 @@ export default function AddDeviceCredentialSetTrigger({ children, ...rest }: Add
           payload = {
             ...payload,
             username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
             authType: values.authType,
             authKey: values.authKey ?? undefined,
+            authKeyVaultInstanceId: values.authKeyVaultInstanceId,
+            authKeyVaultPath: values.authKeyVaultPath,
             privType: values.privType,
             privKey: values.privKey ?? undefined,
+            privKeyVaultInstanceId: values.privKeyVaultInstanceId,
+            privKeyVaultPath: values.privKeyVaultPath,
           }
         } else if (type === CredentialSetType.SSH || type === CredentialSetType.Telnet) {
           payload = {
             ...payload,
             username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
             password: values.password ?? undefined,
+            passwordVaultInstanceId: values.passwordVaultInstanceId,
+            passwordVaultPath: values.passwordVaultPath,
             superPassword: values.superPassword ?? undefined,
+            superPasswordVaultInstanceId: values.superPasswordVaultInstanceId,
+            superPasswordVaultPath: values.superPasswordVaultPath,
           }
         } else if (type === CredentialSetType.SSHKey) {
           payload = {
             ...payload,
             username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
             privateKey: values.privateKey ?? undefined,
+            privateKeyVaultInstanceId: values.privateKeyVaultInstanceId,
+            privateKeyVaultPath: values.privateKeyVaultPath,
             password: values.password ?? undefined,
+            passwordVaultInstanceId: values.passwordVaultInstanceId,
+            passwordVaultPath: values.passwordVaultPath,
             superPassword: values.superPassword ?? undefined,
+            superPasswordVaultInstanceId: values.superPasswordVaultInstanceId,
+            superPasswordVaultPath: values.superPasswordVaultPath,
           }
         } else if (type === CredentialSetType.HTTP) {
           payload = {
             ...payload,
             username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
             password: values.password ?? undefined,
+            passwordVaultInstanceId: values.passwordVaultInstanceId,
+            passwordVaultPath: values.passwordVaultPath,
           }
         }
 

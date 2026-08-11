@@ -7,9 +7,10 @@ import {
   Domain,
   Hook,
   User,
+  VaultInstance,
 } from "@/types";
 import httpClient from "./httpClient";
-import { DeviceCredentialPayload, PaginationQueryParams } from "./types";
+import { DeviceCredentialPayload, PaginationQueryParams, VaultInstancePayload } from "./types";
 
 async function getAllApiTokens(queryParams: PaginationQueryParams)  {
   return httpClient.get<ApiToken[]>("/apitokens", {
@@ -119,6 +120,44 @@ async function getAllDrivers(pageParams: PaginationQueryParams, refresh: boolean
   });
 }
 
+async function getAllVaultInstances(queryParams: PaginationQueryParams) {
+  return httpClient.get<VaultInstance[]>("/vaultinstances", {
+    queryParams,
+  });
+}
+
+async function createVaultInstance(payload: Partial<VaultInstancePayload>) {
+  return httpClient.post<VaultInstance, Partial<VaultInstancePayload>>(
+    "/vaultinstances",
+    payload
+  );
+}
+
+async function updateVaultInstance(
+  id: number,
+  payload: Partial<VaultInstancePayload>
+) {
+  return httpClient.put<VaultInstance, Partial<VaultInstancePayload>>(
+    `/vaultinstances/${id}`,
+    payload
+  );
+}
+
+async function removeVaultInstance(id: number) {
+  return httpClient.delete(`/vaultinstances/${id}`);
+}
+
+async function testVaultInstance(
+  payload: Partial<VaultInstancePayload>,
+  id?: number
+) {
+  return httpClient.post<null, Partial<VaultInstancePayload>>(
+    "/vaultinstances/test",
+    payload,
+    { queryParams: id ? { id } : undefined }
+  );
+}
+
 async function getAllClusterMembers() {
   return httpClient.get<ClusterMember[]>("/cluster/members");
 }
@@ -149,6 +188,11 @@ export default {
   updateUser,
   removeUser,
   getAllDrivers,
+  getAllVaultInstances,
+  createVaultInstance,
+  updateVaultInstance,
+  removeVaultInstance,
+  testVaultInstance,
   getAllClusterMembers,
   getClusterMasterStatus,
 };

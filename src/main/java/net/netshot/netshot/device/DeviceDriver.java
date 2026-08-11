@@ -791,7 +791,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * @param location = The location of the driver
 	 * @throws Exception when something went wrong
 	 */
-	protected DeviceDriver(Reader reader, String sourceName, Location location) throws Exception {
+	public DeviceDriver(Reader reader, String sourceName, Location location) throws Exception {
 		this.attributesByName = new HashMap<>();
 		for (AttributeDefinition.AttributeLevel level : AttributeDefinition.AttributeLevel.values()) {
 			this.attributesByName.put(level, new HashMap<>());

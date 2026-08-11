@@ -17,7 +17,7 @@ export type SwitchProps<T extends FieldValues> = {
   label?: string
   description?: string
   showStateIcon?: boolean
-} & Omit<FormControlProps<T>, "ref">
+} & Omit<FormControlProps<T>, "ref" | "prefix">
 
 export default function Switch<T extends FieldValues>(props: SwitchProps<T>) {
   const { label, description, control, name, defaultValue, showStateIcon, ...other } = props

@@ -58,6 +58,9 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 import net.netshot.netshot.utils.HttpsCaTrustMode;
 import net.netshot.netshot.utils.HttpsTrustPolicy;
+import net.netshot.netshot.vault.VaultException;
+import net.netshot.netshot.vault.VaultManager;
+import net.netshot.netshot.vault.VaultableSecret;
 import net.netshot.netshot.work.TaskContext;
 
 /**
@@ -218,13 +221,13 @@ public class Http implements Client {
 	 * Applies the access's configured TLS trust policy, read from its {@link DeviceAccess} row.
 	 * Only effective for a TLS ({@code https}) access - a no-op otherwise. Must be called before
 	 * {@link #connect()}.
-	 * @param caTrustMode the CA trust mode (defaults to {@code SYSTEM_TRUSTSTORE} if null)
-	 * @param customCaCertificate the PEM-encoded trust anchor certificate(s), used when
-	 *        {@code caTrustMode} is {@code CUSTOM_CA}
+	 * @param trustMode the CA trust mode (defaults to {@code SYSTEM_TRUSTSTORE} if null)
+	 * @param caCertificate the PEM-encoded trust anchor certificate(s), used when
+	 *        {@code trustMode} is {@code CUSTOM_CA}
 	 */
-	public void applyTrustPolicy(HttpsCaTrustMode caTrustMode, String customCaCertificate) {
-		this.caTrustMode = caTrustMode == null ? HttpsCaTrustMode.SYSTEM_TRUSTSTORE : caTrustMode;
-		this.customCaCertificate = customCaCertificate;
+	public void applyTrustPolicy(HttpsCaTrustMode trustMode, String caCertificate) {
+		this.caTrustMode = trustMode == null ? HttpsCaTrustMode.SYSTEM_TRUSTSTORE : trustMode;
+		this.customCaCertificate = caCertificate;
 	}
 
 	@Override
@@ -279,23 +282,27 @@ public class Http implements Client {
 		if (auth == null || account == null || auth.getType() == null) {
 			return;
 		}
+		// Resolved once here (local/Vault, per VaultableSecret) rather than read
+		// piecemeal below, so a Vault-backed username/password is only fetched once per request.
+		String username = resolveSecret(account.getUsernameSecret());
+		String password = resolveSecret(account.getPasswordSecret());
 		if ("http".equals(auth.getType())) {
 			if ("bearer".equals(auth.getScheme())) {
-				if (account.getPassword() != null) {
-					headers.put("Authorization", "Bearer " + account.getPassword());
+				if (password != null) {
+					headers.put("Authorization", "Bearer " + password);
 				}
 			}
 			else {
 				// Basic auth (default for type=http when scheme isn't "bearer")
-				String user = account.getUsername() == null ? "" : account.getUsername();
-				String pass = account.getPassword() == null ? "" : account.getPassword();
+				String user = username == null ? "" : username;
+				String pass = password == null ? "" : password;
 				String encoded = Base64.getEncoder()
 					.encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
 				headers.put("Authorization", "Basic " + encoded);
 			}
 		}
 		else if ("apiKey".equals(auth.getType())) {
-			String value = account.getPassword();
+			String value = password;
 			if (value == null) {
 				return;
 			}
@@ -311,12 +318,28 @@ public class Http implements Client {
 			}
 		}
 		else if ("cookie".equals(auth.getType())) {
-			Map<String, String> loginCookies = this.ensureCookieSession(httpConfig, auth, account);
+			Map<String, String> loginCookies = this.ensureCookieSession(httpConfig, auth, username, password);
 			cookies.putAll(loginCookies);
 		}
 		// "oauth2" / "openIdConnect": schema is recognized and validated by
 		// DeviceDriver, but the token fetch/cache/refresh flow against an IdP
 		// is a deliberately deferred fast-follow, not implemented in Phase 1.
+	}
+
+	/**
+	 * Resolves a credential field's actual value (local, or from Vault),
+	 * wrapping a Vault failure as an {@link IOException} so it's handled the
+	 * same way as any other request failure by callers.
+	 * @param secret the vaultable secret to resolve
+	 * @return the resolved value
+	 */
+	private static String resolveSecret(VaultableSecret secret) throws IOException {
+		try {
+			return VaultManager.resolve(secret);
+		}
+		catch (VaultException e) {
+			throw new IOException("Unable to resolve a Vault-backed credential: " + e.getMessage(), e);
+		}
 	}
 
 	/**
@@ -326,17 +349,18 @@ public class Http implements Client {
 	 * replay them without logging in again.
 	 * @param httpConfig the access's declared HTTP configuration (for the base path)
 	 * @param auth the "cookie" auth scheme (method/path/data/contentType)
-	 * @param account the credential set to log in with
+	 * @param username the resolved username to substitute into the login body
+	 * @param password the resolved password to substitute into the login body
 	 * @return the session cookies to replay on every request
 	 * @throws IOException if the login request could not be sent, or came back with a non-2xx status
 	 */
-	private Map<String, String> ensureCookieSession(HttpConfig httpConfig, AuthScheme auth, DeviceHttpAccount account)
-			throws IOException {
+	private Map<String, String> ensureCookieSession(HttpConfig httpConfig, AuthScheme auth,
+			String username, String password) throws IOException {
 		if (this.cookieSessionAttempted) {
 			return this.sessionCookies;
 		}
 		this.connect();
-		Object substitutedData = substitutePlaceholders(auth.getData(), account);
+		Object substitutedData = substitutePlaceholders(auth.getData(), username, password);
 		Entity<?> entity;
 		if ("form".equals(auth.getContentType())) {
 			entity = Entity.form(toForm(substitutedData));
@@ -404,28 +428,29 @@ public class Http implements Client {
 	 * placeholders (see {@link DeviceDriver#PLACEHOLDER_USERNAME}/{@link DeviceDriver#PLACEHOLDER_PASSWORD})
 	 * in a driver-declared "cookie" auth login body with the resolved credential's values.
 	 * @param value the value to substitute into (String, Map, List, or any other plain object)
-	 * @param account the credential set to substitute with
+	 * @param username the resolved username to substitute
+	 * @param password the resolved password to substitute
 	 * @return the substituted value
 	 */
-	private static Object substitutePlaceholders(Object value, DeviceHttpAccount account) {
+	private static Object substitutePlaceholders(Object value, String username, String password) {
 		if (value instanceof String s) {
 			String result = s.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
-				Matcher.quoteReplacement(StringUtils.defaultString(account.getUsername())));
+				Matcher.quoteReplacement(StringUtils.defaultString(username)));
 			result = result.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
-				Matcher.quoteReplacement(StringUtils.defaultString(account.getPassword())));
+				Matcher.quoteReplacement(StringUtils.defaultString(password)));
 			return result;
 		}
 		if (value instanceof Map<?, ?> map) {
 			Map<String, Object> result = new HashMap<>();
 			for (Map.Entry<?, ?> entry : map.entrySet()) {
-				result.put(String.valueOf(entry.getKey()), substitutePlaceholders(entry.getValue(), account));
+				result.put(String.valueOf(entry.getKey()), substitutePlaceholders(entry.getValue(), username, password));
 			}
 			return result;
 		}
 		if (value instanceof List<?> list) {
 			List<Object> result = new ArrayList<>();
 			for (Object item : list) {
-				result.add(substitutePlaceholders(item, account));
+				result.add(substitutePlaceholders(item, username, password));
 			}
 			return result;
 		}

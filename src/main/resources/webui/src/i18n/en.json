@@ -931,7 +931,9 @@
       "selectAuthType": "Select an auth type",
       "selectPrivType": "Select a priv type",
       "selectProtocol": "Select a protocol",
-      "selectCliMode": "Select CLI mode"
+      "selectCliMode": "Select CLI mode",
+      "authKeySecret": "Authentication key",
+      "privKeySecret": "Privacy key"
     },
     "api": {
       "documentation": "API Documentation",
@@ -1087,6 +1089,47 @@
         "last7Days": "Last 7 days",
         "last30Days": "Last 30 days"
       }
+    },
+    "vault": {
+      "list": "Vault instances",
+      "manage": "Manage Vault instances used to resolve Vault-backed device credentials",
+      "create": "Create Vault instance",
+      "edit": "Edit Vault instance",
+      "remove": "Remove Vault instance",
+      "namePlaceholder": "vault instance name",
+      "typeVaultKv2": "Vault-compatible (KV v2)",
+      "connectionNotSecured": "This connection is not fully secured (plain HTTP, or HTTPS with weakened certificate/hostname validation)",
+      "successfullyCreated": "Vault instance {{name}} has been successfully created",
+      "successfullyUpdated": "Vault instance {{name}} has been successfully updated",
+      "successfullyRemoved": "Vault instance {{name}} has been successfully removed",
+      "aboutToRemove": "You are about to remove the Vault instance <bold>{{name}}</bold>, are you sure?",
+      "noneConfigured": "There is no Vault instance configured",
+      "canCreate": "You can create a Vault instance to resolve device credential fields stored in Vault",
+      "baseUrl": "Base URL",
+      "namespace": "Namespace",
+      "namespaceHelperText": "Optional Vault Enterprise namespace",
+      "kvMountPath": "KV mount path",
+      "authMethod": "Authentication method",
+      "authMethodAppRole": "AppRole",
+      "authMethodJwt": "JWT",
+      "appRoleMountPath": "AppRole mount path",
+      "appRoleMountPathHelperText": "Path the AppRole auth method is mounted at in Vault (default \"approle\")",
+      "roleId": "Role ID",
+      "secretId": "Secret ID",
+      "jwtMountPath": "JWT mount path",
+      "jwtMountPathHelperText": "Path the JWT auth method is mounted at in Vault (default \"jwt\")",
+      "idpTokenEndpoint": "IdP token endpoint",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "vaultRole": "Vault role",
+      "vaultRoleHelperText": "Name of the role configured on Vault's JWT auth method (not the IdP) - it tells Vault which policies to grant the incoming token",
+      "scope": "Scope",
+      "testConnection": "Test connection",
+      "testConnectionSuccess": "The connection to the Vault instance succeeded",
+      "local": "Local",
+      "selectSource": "Local or Vault-backed",
+      "pathPlaceholder": "secret path/key",
+      "pathHelperText": "Secret path, ending with the key holding the value, e.g. \"app/creds/username\"."
     }
   }
 }

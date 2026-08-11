@@ -58,7 +58,7 @@ function DeviceEditForm() {
       {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
         <>
           <Separator />
-          <DeviceAccessFields control={form.control} accessDefinitions={selectedDeviceType.accessDefinitions} />
+          <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
           <Separator />
         </>
       )}
@@ -112,6 +112,20 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
         sshTrustedHostKeys: access?.sshTrustedHostKeys ?? "",
         httpsCaTrustMode: access?.httpsCaTrustMode ?? HttpsCaTrustMode.SystemTruststore,
         httpsCustomCaCertificate: access?.httpsCustomCaCertificate ?? "",
+        usernameVaultInstanceId: access?.specificCredentialSet?.usernameVaultInstanceId ?? null,
+        usernameVaultPath: access?.specificCredentialSet?.usernameVaultPath ?? "",
+        passwordVaultInstanceId: access?.specificCredentialSet?.passwordVaultInstanceId ?? null,
+        passwordVaultPath: access?.specificCredentialSet?.passwordVaultPath ?? "",
+        superPasswordVaultInstanceId: access?.specificCredentialSet?.superPasswordVaultInstanceId ?? null,
+        superPasswordVaultPath: access?.specificCredentialSet?.superPasswordVaultPath ?? "",
+        privateKeyVaultInstanceId: access?.specificCredentialSet?.privateKeyVaultInstanceId ?? null,
+        privateKeyVaultPath: access?.specificCredentialSet?.privateKeyVaultPath ?? "",
+        communityVaultInstanceId: access?.specificCredentialSet?.communityVaultInstanceId ?? null,
+        communityVaultPath: access?.specificCredentialSet?.communityVaultPath ?? "",
+        authKeyVaultInstanceId: access?.specificCredentialSet?.authKeyVaultInstanceId ?? null,
+        authKeyVaultPath: access?.specificCredentialSet?.authKeyVaultPath ?? "",
+        privKeyVaultInstanceId: access?.specificCredentialSet?.privKeyVaultInstanceId ?? null,
+        privKeyVaultPath: access?.specificCredentialSet?.privKeyVaultPath ?? "",
       }
     }) as DeviceAccessFormValue[]
 

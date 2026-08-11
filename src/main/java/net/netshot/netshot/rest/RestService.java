@@ -219,6 +219,11 @@ import net.netshot.netshot.hooks.WebHook;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.RestApiView;
 import net.netshot.netshot.utils.HttpsCaTrustMode;
+import net.netshot.netshot.vault.HashicorpVaultKv2Instance;
+import net.netshot.netshot.vault.VaultException;
+import net.netshot.netshot.vault.VaultInstance;
+import net.netshot.netshot.vault.VaultManager;
+import net.netshot.netshot.vault.VaultableSecret;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.Task.ScheduleType;
@@ -2176,6 +2181,79 @@ public class RestService extends Thread {
 	}
 
 	/**
+	 * Resolves an incoming vaultable field's Local/Vault state into a fresh
+	 * {@link VaultableSecret} bundle: either the referenced {@link VaultInstance}
+	 * is resolved and the local value cleared, or any Vault reference is
+	 * cleared and the local value is carried over from {@code current}
+	 * (respecting the usual "null = unchanged" masking convention for the
+	 * genuinely secret fields) or from {@code incoming} if it was changed.
+	 * <p>
+	 * Callers must apply the result back onto the owning entity via its
+	 * {@code setXxxSecret(...)} setter - each vaultable field is backed by
+	 * plain, individually mapped columns/association on the entity (not a
+	 * JPA embeddable), so mutating a bundle returned by a getter has no
+	 * effect on its own.
+	 * @param session the Hibernate session, used to resolve the Vault instance ID
+	 * @param incoming the incoming (deserialized) field
+	 * @param current the field's current value on the target entity, used to preserve
+	 *        the local value when unchanged (pass the same object as {@code incoming}
+	 *        when resolving a brand-new, not-yet-persisted entity's own references)
+	 * @return the resolved bundle to apply via {@code setXxxSecret(...)}
+	 */
+	private static VaultableSecret resolveVaultableField(Session session, VaultableSecret incoming, VaultableSecret current) {
+		VaultableSecret result = new VaultableSecret();
+		Long vaultInstanceId = incoming.getVaultInstanceId();
+		if (vaultInstanceId != null) {
+			VaultInstance vaultInstance = session.get(VaultInstance.class, vaultInstanceId);
+			if (vaultInstance == null) {
+				throw new NetshotBadRequestException("Invalid Vault instance.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_VAULT_INSTANCE);
+			}
+			result.setVaultInstance(vaultInstance);
+			result.setVaultPath(incoming.getVaultPath());
+			result.setLocalValue(null);
+		}
+		else {
+			result.setVaultInstance(null);
+			result.setVaultPath(null);
+			result.setLocalValue(incoming.getLocalValue() != null ? incoming.getLocalValue() : current.getLocalValue());
+		}
+		return result;
+	}
+
+	/**
+	 * Applies {@link #resolveVaultableField} to every vaultable field of a
+	 * credential set, dispatching by concrete type (most-specific first,
+	 * since {@link DeviceSnmpv3Community} is itself a {@link DeviceSnmpCommunity}).
+	 * @param session the Hibernate session
+	 * @param target the credential set to update (may be the same object as {@code source})
+	 * @param source the incoming (deserialized) credential set
+	 */
+	private static void applyVaultableFields(Session session, DeviceCredentialSet target, DeviceCredentialSet source) {
+		if (target instanceof DeviceCliAccount cliTarget && source instanceof DeviceCliAccount cliSource) {
+			cliTarget.setUsernameSecret(resolveVaultableField(session, cliSource.getUsernameSecret(), cliTarget.getUsernameSecret()));
+			cliTarget.setPasswordSecret(resolveVaultableField(session, cliSource.getPasswordSecret(), cliTarget.getPasswordSecret()));
+			cliTarget.setSuperPasswordSecret(resolveVaultableField(session, cliSource.getSuperPasswordSecret(), cliTarget.getSuperPasswordSecret()));
+			if (cliTarget instanceof DeviceSshKeyAccount keyTarget && cliSource instanceof DeviceSshKeyAccount keySource) {
+				keyTarget.setPrivateKeySecret(resolveVaultableField(session, keySource.getPrivateKeySecret(), keyTarget.getPrivateKeySecret()));
+			}
+		}
+		else if (target instanceof DeviceSnmpv3Community snmp3Target && source instanceof DeviceSnmpv3Community snmp3Source) {
+			snmp3Target.setCommunitySecret(resolveVaultableField(session, snmp3Source.getCommunitySecret(), snmp3Target.getCommunitySecret()));
+			snmp3Target.setUsernameSecret(resolveVaultableField(session, snmp3Source.getUsernameSecret(), snmp3Target.getUsernameSecret()));
+			snmp3Target.setAuthKeySecret(resolveVaultableField(session, snmp3Source.getAuthKeySecret(), snmp3Target.getAuthKeySecret()));
+			snmp3Target.setPrivKeySecret(resolveVaultableField(session, snmp3Source.getPrivKeySecret(), snmp3Target.getPrivKeySecret()));
+		}
+		else if (target instanceof DeviceSnmpCommunity communityTarget && source instanceof DeviceSnmpCommunity communitySource) {
+			communityTarget.setCommunitySecret(resolveVaultableField(session, communitySource.getCommunitySecret(), communityTarget.getCommunitySecret()));
+		}
+		else if (target instanceof DeviceHttpAccount httpTarget && source instanceof DeviceHttpAccount httpSource) {
+			httpTarget.setUsernameSecret(resolveVaultableField(session, httpSource.getUsernameSecret(), httpTarget.getUsernameSecret()));
+			httpTarget.setPasswordSecret(resolveVaultableField(session, httpSource.getPasswordSecret(), httpTarget.getPasswordSecret()));
+		}
+	}
+
+	/**
 	 * Creates or updates an owned, per-access specific credential set: if
 	 * {@code existing} is null or of a different concrete class than
 	 * {@code incoming}, the old one (if any) is deleted and {@code incoming}
@@ -2198,6 +2276,7 @@ public class RestService extends Thread {
 		if (existing == null) {
 			incoming.setDeviceSpecific(true);
 			incoming.setName(DeviceCredentialSet.generateSpecificName());
+			applyVaultableFields(session, incoming, incoming);
 			session.persist(incoming);
 			return incoming;
 		}
@@ -2241,6 +2320,9 @@ public class RestService extends Thread {
 				httpAccount.setPassword(rsHttpAccount.getPassword());
 			}
 		}
+		// Applied last so that switching a field to Vault mode always wins over
+		// the unconditional local-value copies above (e.g. setUsername(...)).
+		applyVaultableFields(session, existing, incoming);
 		return existing;
 	}
 
@@ -3201,12 +3283,17 @@ public class RestService extends Thread {
 				credentialSet.setMgmtDomain(domain);
 			}
 			credentialSet.setDeviceSpecific(false);
+			applyVaultableFields(session, credentialSet, credentialSet);
 			session.persist(credentialSet);
 			session.getTransaction().commit();
 			AAA_LOG.info("{} has been created.", credentialSet);
 			session.refresh(credentialSet);
 			this.suggestReturnCode(Response.Status.CREATED);
 			return credentialSet;
+		}
+		catch (NetshotBadRequestException e) {
+			Database.rollbackSilently(session);
+			throw e;
 		}
 		catch (HibernateException e) {
 			Database.rollbackSilently(session);
@@ -3323,6 +3410,9 @@ public class RestService extends Thread {
 					httpAccount.setPassword(rsHttpAccount.getPassword());
 				}
 			}
+			// Applied last so that switching a field to Vault mode always wins over
+			// the unconditional local-value copies above (e.g. setUsername(...)).
+			applyVaultableFields(session, credentialSet, rsCredentialSet);
 			session.merge(credentialSet);
 			session.getTransaction().commit();
 			AAA_LOG.info("{} has been edited", credentialSet);
@@ -3352,6 +3442,318 @@ public class RestService extends Thread {
 			session.close();
 		}
 		return credentialSet;
+	}
+
+	/**
+	 * Gets the Vault instances.
+	 *
+	 * @param paginationParams = the pagination parameters
+	 * @return the Vault instances
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("/vaultinstances")
+	@RolesAllowed(User.ROLE_READONLY)
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get the Vault instances",
+		description = "Returns the list of configured Vault instances, used to resolve Vault-backed device credential fields."
+	)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public List<VaultInstance> getVaultInstances(@BeanParam PaginationParams paginationParams)
+		throws WebApplicationException {
+		log.debug("REST request, get Vault instances.");
+		Session session = Database.getSession(true);
+		try {
+			Query<VaultInstance> query = session
+				.createQuery("select v from VaultInstance v", VaultInstance.class);
+			paginationParams.apply(query);
+			return query.list();
+		}
+		catch (HibernateException e) {
+			log.error("Unable to fetch the Vault instances.", e);
+			throw new NetshotBadRequestException("Unable to fetch the Vault instances",
+				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Delete a Vault instance.
+	 *
+	 * @param id the id
+	 * @throws WebApplicationException the web application exception
+	 */
+	@DELETE
+	@Path("/vaultinstances/{id}")
+	@RolesAllowed(User.ROLE_ADMIN)
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Remove a Vault instance",
+		description = "Removes the given Vault instance, by ID."
+	)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void deleteVaultInstance(@PathParam("id") @Parameter(description = "Vault instance ID") Long id)
+		throws WebApplicationException {
+		log.debug("REST request, delete Vault instance {}", id);
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			VaultInstance vaultInstance = session.get(VaultInstance.class, id);
+			if (vaultInstance == null) {
+				log.info("No such Vault instance of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(vaultInstance);
+			session.getTransaction().commit();
+			AAA_LOG.info("Vault instance of ID {} has been deleted.", id);
+			VaultManager.invalidate(id);
+			ClusterManager.requestVaultInstanceReload(id);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
+		}
+		catch (Exception e) {
+			Database.rollbackSilently(session);
+			log.error("Unable to delete the Vault instance {}", id, e);
+			if (e instanceof NetshotBadRequestException nbre) {
+				throw nbre;
+			}
+			if (e instanceof ConstraintViolationException) {
+				throw new NetshotBadRequestException(
+					"Unable to delete the Vault instance, it is referenced by one or more credential fields.",
+					NetshotBadRequestException.Reason.NETSHOT_VAULT_INSTANCE_IN_USE);
+			}
+			throw new NetshotBadRequestException(
+				"Unable to delete the Vault instance",
+				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Adds a Vault instance.
+	 *
+	 * @param vaultInstance the Vault instance
+	 * @return the Vault instance
+	 * @throws WebApplicationException the web application exception
+	 */
+	@POST
+	@Path("/vaultinstances")
+	@RolesAllowed(User.ROLE_ADMIN)
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Add a Vault instance",
+		description = "Creates a Vault instance, which can then be used to resolve Vault-backed device credential fields."
+	)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public VaultInstance addVaultInstance(VaultInstance vaultInstance)
+		throws WebApplicationException {
+		log.debug("REST request, add Vault instance.");
+		if (vaultInstance.getName() == null || "".equals(vaultInstance.getName().trim())) {
+			log.error("Invalid Vault instance name.");
+			throw new NetshotBadRequestException("Invalid name for the Vault instance",
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_VAULT_INSTANCE_NAME);
+		}
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			session.persist(vaultInstance);
+			session.getTransaction().commit();
+			AAA_LOG.info("{} has been created.", vaultInstance);
+			session.refresh(vaultInstance);
+			this.suggestReturnCode(Response.Status.CREATED);
+			return vaultInstance;
+		}
+		catch (HibernateException e) {
+			Database.rollbackSilently(session);
+			Throwable t = e.getCause();
+			log.error("Can't add the Vault instance.", e);
+			if (t != null && t.getMessage().contains("uplicate")) {
+				throw new NetshotBadRequestException(
+					"A Vault instance with this name already exists.",
+					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_VAULT_INSTANCE);
+			}
+			throw new NetshotBadRequestException("Unable to save the Vault instance",
+				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Sets/edits a Vault instance.
+	 *
+	 * @param id the id
+	 * @param rsVaultInstance the posted Vault instance
+	 * @return the Vault instance
+	 * @throws WebApplicationException the web application exception
+	 */
+	@PUT
+	@Path("/vaultinstances/{id}")
+	@RolesAllowed(User.ROLE_ADMIN)
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Update a Vault instance",
+		description = "Edits a Vault instance, by ID."
+	)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public VaultInstance setVaultInstance(@PathParam("id") @Parameter(description = "Vault instance ID") Long id,
+			VaultInstance rsVaultInstance) throws WebApplicationException {
+		log.debug("REST request, edit Vault instance {}", id);
+		Session session = Database.getSession();
+		VaultInstance vaultInstance;
+		try {
+			session.beginTransaction();
+			vaultInstance = session.get(rsVaultInstance.getClass(), id);
+			if (vaultInstance == null) {
+				log.error("Unable to find the Vault instance {}.", id);
+				throw new NetshotBadRequestException(
+					"Unable to find the Vault instance.",
+					NetshotBadRequestException.Reason.NETSHOT_VAULT_INSTANCE_NOT_FOUND);
+			}
+			if (!vaultInstance.getClass().equals(rsVaultInstance.getClass())) {
+				log.error("Wrong posted Vault instance type for Vault instance {}.", id);
+				throw new NetshotBadRequestException(
+					"The posted Vault instance type doesn't match the existing one.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_VAULT_INSTANCE);
+			}
+			vaultInstance.setName(rsVaultInstance.getName());
+			if (vaultInstance.getName() == null || "".equals(vaultInstance.getName().trim())) {
+				log.error("Invalid Vault instance name.");
+				throw new NetshotBadRequestException("Invalid name for the Vault instance",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_VAULT_INSTANCE_NAME);
+			}
+			vaultInstance.setBaseUrl(rsVaultInstance.getBaseUrl());
+			vaultInstance.setNamespace(rsVaultInstance.getNamespace());
+			vaultInstance.setHttpsCaTrustMode(rsVaultInstance.getHttpsCaTrustMode());
+			vaultInstance.setHttpsCustomCaCertificate(rsVaultInstance.getHttpsCustomCaCertificate());
+			if (vaultInstance instanceof HashicorpVaultKv2Instance hcInstance
+					&& rsVaultInstance instanceof HashicorpVaultKv2Instance rsHcInstance) {
+				hcInstance.setKvMountPath(rsHcInstance.getKvMountPath());
+				hcInstance.setAuthMethod(rsHcInstance.getAuthMethod());
+				hcInstance.setAppRoleId(rsHcInstance.getAppRoleId());
+				if (rsHcInstance.getAppRoleSecretId() != null) {
+					hcInstance.setAppRoleSecretId(rsHcInstance.getAppRoleSecretId());
+				}
+				hcInstance.setJwtIdpTokenEndpoint(rsHcInstance.getJwtIdpTokenEndpoint());
+				hcInstance.setJwtClientId(rsHcInstance.getJwtClientId());
+				if (rsHcInstance.getJwtClientSecret() != null) {
+					hcInstance.setJwtClientSecret(rsHcInstance.getJwtClientSecret());
+				}
+				hcInstance.setJwtVaultRole(rsHcInstance.getJwtVaultRole());
+				hcInstance.setJwtScope(rsHcInstance.getJwtScope());
+			}
+			session.merge(vaultInstance);
+			session.getTransaction().commit();
+			AAA_LOG.info("{} has been edited", vaultInstance);
+		}
+		catch (HibernateException e) {
+			Database.rollbackSilently(session);
+			Throwable t = e.getCause();
+			log.error("Unable to save the Vault instance {}.", id, e);
+			if (t != null && t.getMessage().contains("uplicate")) {
+				throw new NetshotBadRequestException(
+					"A Vault instance with this name already exists.",
+					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_VAULT_INSTANCE);
+			}
+			throw new NetshotBadRequestException("Unable to save the Vault instance",
+				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		catch (NetshotBadRequestException e) {
+			Database.rollbackSilently(session);
+			throw e;
+		}
+		finally {
+			session.close();
+		}
+		VaultManager.invalidate(id);
+		ClusterManager.requestVaultInstanceReload(id);
+		return vaultInstance;
+	}
+
+	/**
+	 * Tests connectivity/authentication to a Vault instance, used by the
+	 * Admin UI's "Test connection" action. Works both for a brand-new,
+	 * not-yet-saved instance (no {@code id}) and for re-testing an existing
+	 * one without having to re-enter an unchanged secret (masked "="
+	 * secret fields fall back to the value currently stored for that ID).
+	 *
+	 * @param id the ID of the existing Vault instance being tested, or null when testing a new one
+	 * @param rsVaultInstance the Vault instance configuration to test
+	 * @throws WebApplicationException the web application exception
+	 */
+	@POST
+	@Path("/vaultinstances/test")
+	@RolesAllowed(User.ROLE_ADMIN)
+	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@Operation(
+		summary = "Test a Vault instance connection",
+		description = "Attempts to log in to the given Vault instance to validate reachability and authentication, without persisting anything."
+	)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void testVaultInstance(@QueryParam("id") @Parameter(description = "Existing Vault instance ID, if any") Long id,
+			VaultInstance rsVaultInstance) throws WebApplicationException {
+		log.debug("REST request, test Vault instance '{}'.", rsVaultInstance.getName());
+		if (!(rsVaultInstance instanceof HashicorpVaultKv2Instance rsHcInstance)) {
+			throw new NetshotBadRequestException("Unsupported Vault instance type",
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_VAULT_INSTANCE);
+		}
+		HashicorpVaultKv2Instance hcInstance = rsHcInstance;
+		if (id != null) {
+			// Overlay onto the persisted secrets, so re-testing an already-saved
+			// instance without touching its masked secret field(s) still works.
+			Session session = Database.getSession(true);
+			try {
+				VaultInstance existing = session.get(VaultInstance.class, id);
+				if (!(existing instanceof HashicorpVaultKv2Instance existingHc)) {
+					throw new NetshotBadRequestException("Unable to find the Vault instance.",
+						NetshotBadRequestException.Reason.NETSHOT_VAULT_INSTANCE_NOT_FOUND);
+				}
+				hcInstance = new HashicorpVaultKv2Instance(rsHcInstance.getName());
+				hcInstance.setBaseUrl(rsHcInstance.getBaseUrl());
+				hcInstance.setNamespace(rsHcInstance.getNamespace());
+				hcInstance.setHttpsCaTrustMode(rsHcInstance.getHttpsCaTrustMode());
+				hcInstance.setHttpsCustomCaCertificate(rsHcInstance.getHttpsCustomCaCertificate());
+				hcInstance.setKvMountPath(rsHcInstance.getKvMountPath());
+				hcInstance.setAuthMethod(rsHcInstance.getAuthMethod());
+				hcInstance.setAppRoleMountPath(rsHcInstance.getAppRoleMountPath());
+				hcInstance.setAppRoleId(rsHcInstance.getAppRoleId());
+				hcInstance.setAppRoleSecretId(rsHcInstance.getAppRoleSecretId() != null
+					? rsHcInstance.getAppRoleSecretId() : existingHc.getAppRoleSecretId());
+				hcInstance.setJwtMountPath(rsHcInstance.getJwtMountPath());
+				hcInstance.setJwtIdpTokenEndpoint(rsHcInstance.getJwtIdpTokenEndpoint());
+				hcInstance.setJwtClientId(rsHcInstance.getJwtClientId());
+				hcInstance.setJwtClientSecret(rsHcInstance.getJwtClientSecret() != null
+					? rsHcInstance.getJwtClientSecret() : existingHc.getJwtClientSecret());
+				hcInstance.setJwtVaultRole(rsHcInstance.getJwtVaultRole());
+				hcInstance.setJwtScope(rsHcInstance.getJwtScope());
+			}
+			finally {
+				session.close();
+			}
+		}
+		try {
+			VaultManager.testConnection(hcInstance);
+			AAA_LOG.info("Test connection to Vault instance '{}' succeeded.", hcInstance.getName());
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
+		}
+		catch (VaultException e) {
+			AAA_LOG.warn("Test connection to Vault instance '{}' failed: {}", hcInstance.getName(), e.getMessage());
+			throw new NetshotBadRequestException(
+				"Vault connection test failed: " + e.getMessage(),
+				NetshotBadRequestException.Reason.NETSHOT_VAULT_CONNECTION_FAILED);
+		}
 	}
 
 	/**

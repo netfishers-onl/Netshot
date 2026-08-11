@@ -114,6 +114,7 @@ import net.netshot.netshot.diagnostic.DiagnosticTextResult;
 import net.netshot.netshot.hooks.Hook;
 import net.netshot.netshot.hooks.HookTrigger;
 import net.netshot.netshot.hooks.WebHook;
+import net.netshot.netshot.vault.HashicorpVaultKv2Instance;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.TaskDeviceListMember;
@@ -327,7 +328,8 @@ public final class Database {
 				.addAnnotatedClass(ApiToken.class)
 				.addAnnotatedClass(Hook.class)
 				.addAnnotatedClass(WebHook.class)
-				.addAnnotatedClass(HookTrigger.class);
+				.addAnnotatedClass(HookTrigger.class)
+				.addAnnotatedClass(HashicorpVaultKv2Instance.class);
 			for (Class<?> clazz : Task.getTaskClasses()) {
 				log.debug("Registering task class " + clazz.getName());
 				sources.addAnnotatedClass(clazz);

@@ -67,7 +67,6 @@ import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.hooks.Hook;
-import net.netshot.netshot.hooks.HookTrigger;
 import net.netshot.netshot.hooks.WebHook;
 import net.netshot.netshot.rest.NetshotBadRequestException;
 import net.netshot.netshot.rest.RestService;

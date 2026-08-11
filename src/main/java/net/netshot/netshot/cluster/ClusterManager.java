@@ -48,10 +48,12 @@ import net.netshot.netshot.cluster.messages.ClusterMessage;
 import net.netshot.netshot.cluster.messages.HelloClusterMessage;
 import net.netshot.netshot.cluster.messages.LoadTasksMessage;
 import net.netshot.netshot.cluster.messages.ReloadDriversMessage;
+import net.netshot.netshot.cluster.messages.VaultInstanceChangedMessage;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.rest.RestService;
 import net.netshot.netshot.rest.RestViews.ClusteringView;
+import net.netshot.netshot.vault.VaultManager;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
@@ -90,6 +92,9 @@ public class ClusterManager extends Thread {
 
 	/** IDs of devices to request auto snapshots for. */
 	private Set<Long> autoSnapshotDeviceIds = new HashSet<>();
+
+	/** IDs of Vault instances whose cache should be invalidated cluster-wide. */
+	private Set<Long> vaultInstanceReloadIds = new HashSet<>();
 
 	/**
 	 * Initializes the cluster manager.
@@ -171,6 +176,19 @@ public class ClusterManager extends Thread {
 		if (nsClusterManager != null) {
 			synchronized (nsClusterManager.autoSnapshotDeviceIds) {
 				nsClusterManager.autoSnapshotDeviceIds.add(deviceId);
+			}
+		}
+	}
+
+	/**
+	 * Request all cluster members to invalidate their local Vault cache
+	 * for the given Vault instance (e.g. after its connection settings changed).
+	 * @param vaultInstanceId the ID of the Vault instance
+	 */
+	public static void requestVaultInstanceReload(long vaultInstanceId) {
+		if (nsClusterManager != null) {
+			synchronized (nsClusterManager.vaultInstanceReloadIds) {
+				nsClusterManager.vaultInstanceReloadIds.add(vaultInstanceId);
 			}
 		}
 	}
@@ -358,19 +376,31 @@ public class ClusterManager extends Thread {
 						this.sendMessage(dbConnection, helloMessage);
 						this.lastSentHelloTime = System.currentTimeMillis();
 					}
-					if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
-						if (this.driverReloadRequested) {
-							ReloadDriversMessage reloadMessage = new ReloadDriversMessage(this.localMember);
-							this.sendMessage(dbConnection, reloadMessage);
-						}
-						this.driverReloadRequested = false;
-						if (this.loadTasksRequested) {
-							LoadTasksMessage taskMessage = new LoadTasksMessage(this.localMember);
-							this.sendMessage(dbConnection, taskMessage);
-						}
-						this.loadTasksRequested = false;
+					// Broadcast-to-everyone requests: sent regardless of local mastership status,
+					// since any node can NOTIFY the shared channel and every peer is listening
+					// (unlike the member->master requests below, which only non-master members send).
+					if (this.driverReloadRequested) {
+						ReloadDriversMessage reloadMessage = new ReloadDriversMessage(this.localMember);
+						this.sendMessage(dbConnection, reloadMessage);
 					}
-					else {
+					this.driverReloadRequested = false;
+					if (this.loadTasksRequested) {
+						LoadTasksMessage taskMessage = new LoadTasksMessage(this.localMember);
+						this.sendMessage(dbConnection, taskMessage);
+					}
+					this.loadTasksRequested = false;
+					VaultInstanceChangedMessage vaultReloadMessage = null;
+					synchronized (this.vaultInstanceReloadIds) {
+						if (this.vaultInstanceReloadIds.size() > 0) {
+							vaultReloadMessage = new VaultInstanceChangedMessage(this.localMember);
+							vaultReloadMessage.addVaultInstanceIds(this.vaultInstanceReloadIds);
+						}
+						this.vaultInstanceReloadIds.clear();
+					}
+					if (vaultReloadMessage != null) {
+						this.sendMessage(dbConnection, vaultReloadMessage);
+					}
+					if (!MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
 						if (this.assignTasksRequested) {
 							AssignTasksMessage taskMessage = new AssignTasksMessage(this.localMember);
 							this.sendMessage(dbConnection, taskMessage);
@@ -475,6 +505,11 @@ public class ClusterManager extends Thread {
 									for (long deviceId : snapshotMessage.getDeviceIds()) {
 										TakeSnapshotTask.scheduleSnapshotIfNeeded(deviceId);
 									}
+								}
+							}
+							else if (message instanceof VaultInstanceChangedMessage vaultMessage) {
+								for (long vaultInstanceId : vaultMessage.getVaultInstanceIds()) {
+									VaultManager.invalidate(vaultInstanceId);
 								}
 							}
 							else {

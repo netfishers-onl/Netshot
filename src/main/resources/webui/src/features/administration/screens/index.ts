@@ -5,4 +5,5 @@ export { default as AdministrationDomainScreen } from "./AdministrationDomainScr
 export { default as AdministrationDriverScreen } from "./AdministrationDriverScreen";
 export { default as AdministrationScreen } from "./AdministrationScreen";
 export { default as AdministrationUserScreen } from "./AdministrationUserScreen";
+export { default as AdministrationVaultInstanceScreen } from "./AdministrationVaultInstanceScreen";
 export { default as AdministrationWebhookScreen } from "./AdministrationWebhookScreen";

@@ -119,7 +119,7 @@ function DeviceBulkEditForm({
       ) : accessDefinitions && Object.keys(accessDefinitions).length > 0 && (
         <>
           <Separator />
-          <DeviceAccessFields bulk control={form.control} accessDefinitions={accessDefinitions} />
+          <DeviceAccessFields bulk control={form.control} setValue={form.setValue} accessDefinitions={accessDefinitions} />
           <Separator />
         </>
       )}

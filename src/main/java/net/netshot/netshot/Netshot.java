@@ -74,6 +74,7 @@ import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.rest.LoggerFilter;
 import net.netshot.netshot.rest.RestService;
 import net.netshot.netshot.utils.BouncyCastleLoader;
+import net.netshot.netshot.vault.VaultManager;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
 //CHECKSTYLE:OFF: IllegalImport
 import sun.misc.Signal;
@@ -538,6 +539,7 @@ public class Netshot extends Thread {
 		Telnet.loadConfig();
 		Collector.loadConfig();
 		ConfigBinaryFileAttribute.loadConfig();
+		VaultManager.loadConfig();
 	}
 
 	/**
@@ -629,6 +631,9 @@ public class Netshot extends Thread {
 
 			log.info("Starting the clustering manager.");
 			ClusterManager.init();
+
+			log.info("Starting the Vault token refresh daemon.");
+			VaultManager.init();
 
 			log.info("Initializing the task manager.");
 			TaskManager.init();

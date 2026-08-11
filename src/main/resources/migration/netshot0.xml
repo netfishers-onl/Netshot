@@ -2024,4 +2024,96 @@
 			<column name="https_verify_hostname"/>
 		</dropColumn>
 	</changeSet>
+	<changeSet author="netshot" id="0.25.0_39">
+		<!-- HashiCorp Vault integration: named Vault instances, modeled as a
+			discriminated hierarchy (dtype) like device_credential_set, so
+			other Vault backend types can be added later. Only one concrete
+			type exists today: HashicorpVaultKv2Instance. Its two supported
+			auth methods (AppRole / JWT) are plain columns rather than a
+			second hierarchy, since there are only two of them. -->
+		<createTable tableName="vault_instance">
+			<column name="dtype" type="VARCHAR(31)">
+				<constraints nullable="false"/>
+			</column>
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="change_date" type="datetime"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints unique="true" nullable="false"/>
+			</column>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="base_url" type="VARCHAR(1000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="namespace" type="VARCHAR(255)"/>
+			<column name="https_ca_trust_mode" type="VARCHAR(255)" value="SYSTEM_TRUSTSTORE">
+				<constraints nullable="false"/>
+			</column>
+			<column name="https_custom_ca_certificate" type="LONGTEXT"/>
+			<column name="kv_mount_path" type="VARCHAR(255)" value="secret"/>
+			<column name="auth_method" type="VARCHAR(31)"/>
+			<column name="app_role_mount_path" type="VARCHAR(255)" value="approle"/>
+			<column name="app_role_id" type="VARCHAR(255)"/>
+			<column name="app_role_secret_id" type="VARCHAR(1000)"/>
+			<column name="jwt_mount_path" type="VARCHAR(255)" value="jwt"/>
+			<column name="jwt_idp_token_endpoint" type="VARCHAR(1000)"/>
+			<column name="jwt_client_id" type="VARCHAR(255)"/>
+			<column name="jwt_client_secret" type="VARCHAR(1000)"/>
+			<column name="jwt_vault_role" type="VARCHAR(255)"/>
+			<column name="jwt_scope" type="VARCHAR(255)"/>
+		</createTable>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_40">
+		<!-- Per-field Local/Vault toggle for every device credential field:
+			two sibling columns added next to each existing local-value
+			column (which keeps working unchanged for local secrets - this is
+			purely additive/opt-in, no data migration). A non-null
+			*_vault_instance_id means the field is Vault-backed and the
+			existing local-value column for that field is unused (cleared).
+			*_vault_path combines the KV v2 secret path and the key within it
+			(the part after the last '/') - see VaultKeyPath. onDelete
+			RESTRICT so a Vault instance still referenced by a credential
+			field can't be deleted (mirrors the existing "credentials in use"
+			handling for credential sets). -->
+		<addColumn tableName="device_credential_set">
+			<column name="username_vault_instance_id" type="BIGINT"/>
+			<column name="username_vault_path" type="VARCHAR(1000)"/>
+			<column name="password_vault_instance_id" type="BIGINT"/>
+			<column name="password_vault_path" type="VARCHAR(1000)"/>
+			<column name="super_password_vault_instance_id" type="BIGINT"/>
+			<column name="super_password_vault_path" type="VARCHAR(1000)"/>
+			<column name="private_key_vault_instance_id" type="BIGINT"/>
+			<column name="private_key_vault_path" type="VARCHAR(1000)"/>
+			<column name="community_vault_instance_id" type="BIGINT"/>
+			<column name="community_vault_path" type="VARCHAR(1000)"/>
+			<column name="auth_key_vault_instance_id" type="BIGINT"/>
+			<column name="auth_key_vault_path" type="VARCHAR(1000)"/>
+			<column name="priv_key_vault_instance_id" type="BIGINT"/>
+			<column name="priv_key_vault_path" type="VARCHAR(1000)"/>
+		</addColumn>
+		<addForeignKeyConstraint baseColumnNames="username_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_username_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="password_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_password_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="super_password_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_super_password_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="private_key_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_private_key_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="community_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_community_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="auth_key_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_auth_key_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="priv_key_vault_instance_id" baseTableName="device_credential_set"
+			constraintName="FK_dcs_priv_key_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
+			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
+	</changeSet>
 </databaseChangeLog>

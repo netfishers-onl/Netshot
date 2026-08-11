@@ -1,0 +1,135 @@
+import { Option } from "@/types"
+import { Button, Field, IconButton, Menu, Portal } from "@chakra-ui/react"
+import { Control, FieldPath, FieldValues, useWatch, UseFormSetValue } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { LuKeyRound, LuVault } from "react-icons/lu"
+import FormControl, { FormControlType } from "./FormControl"
+
+export type VaultableInputProps<TFieldValues extends FieldValues> = {
+  label: string
+  /** Base field name (e.g. "password") - the form must also carry the
+   * `${name}VaultInstanceId`/`${name}VaultPath` sibling fields (the latter
+   * combining the KV path and the key within it, e.g. "app/creds/password"). */
+  name: FieldPath<TFieldValues>
+  control: Control<TFieldValues>
+  setValue: UseFormSetValue<TFieldValues>
+  fieldType?: FormControlType.Password | FormControlType.Text | FormControlType.LongText
+  required?: boolean
+  allowUnchanged?: boolean
+  placeholder?: string
+  helperText?: string
+  /** Available Vault instances, as menu options (label = name, value = ID). "Local" is added automatically. */
+  vaultInstances: Option<number>[]
+  rows?: number
+  autosize?: boolean
+  mono?: boolean
+}
+
+export default function VaultableInput<TFieldValues extends FieldValues>(
+  props: VaultableInputProps<TFieldValues>
+) {
+  const {
+    label,
+    name,
+    control,
+    setValue,
+    fieldType = FormControlType.Text,
+    required = false,
+    allowUnchanged = false,
+    placeholder,
+    helperText,
+    vaultInstances,
+    rows,
+    autosize,
+    mono,
+  } = props
+  const { t } = useTranslation()
+
+  const vaultInstanceIdField = `${name}VaultInstanceId` as FieldPath<TFieldValues>
+  const vaultPathField = `${name}VaultPath` as FieldPath<TFieldValues>
+
+  const vaultInstanceId = useWatch({ control, name: vaultInstanceIdField })
+  const isVaultBacked = vaultInstanceId !== null && vaultInstanceId !== undefined
+  const hasVaultInstances = vaultInstances.length > 0
+  const currentVaultInstance = vaultInstances.find((instance) => instance.value === vaultInstanceId)
+
+  function selectVaultInstance(value: number | null) {
+    if (value === null) {
+      setValue(vaultPathField, "" as never)
+    } else {
+      setValue(name, null as never)
+    }
+    setValue(vaultInstanceIdField, value as never)
+  }
+
+  const vaultPicker = hasVaultInstances ? (
+    <Menu.Root
+      onSelect={(details) => {
+        selectVaultInstance(details.value === "local" ? null : Number(details.value))
+      }}
+    >
+      <Menu.Trigger asChild>
+        {isVaultBacked ? (
+          <Button size="xs" fontSize="sm" variant="ghost" aria-label={t("vault.selectSource")}>
+            <LuVault />
+            {currentVaultInstance?.label}
+          </Button>
+        ) : (
+          <IconButton size="xs" variant="ghost" aria-label={t("vault.selectSource")}>
+            <LuKeyRound />
+          </IconButton>
+        )}
+      </Menu.Trigger>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content>
+            <Menu.Item value="local">
+              <LuKeyRound />
+              {t("vault.local")}
+            </Menu.Item>
+            {vaultInstances.map((instance) => (
+              <Menu.Item key={instance.value} value={String(instance.value)}>
+                <LuVault />
+                {instance.label}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
+    </Menu.Root>
+  ) : undefined
+
+  return (
+    <Field.Root required={required}>
+      <Field.Label>
+        {label}
+        {required && <Field.RequiredIndicator />}
+      </Field.Label>
+      {isVaultBacked ? (
+        <FormControl
+          type={FormControlType.Text}
+          placeholder={t("vault.pathPlaceholder")}
+          required
+          control={control}
+          name={vaultPathField}
+          prefix={vaultPicker}
+        />
+      ) : (
+        <FormControl
+          type={fieldType}
+          placeholder={placeholder}
+          required={required}
+          allowUnchanged={allowUnchanged}
+          control={control}
+          name={name}
+          rows={rows}
+          autosize={autosize}
+          mono={mono}
+          prefix={vaultPicker}
+        />
+      )}
+      {helperText && !isVaultBacked && <Field.HelperText>{helperText}</Field.HelperText>}
+      {isVaultBacked && <Field.HelperText>{t("vault.pathHelperText")}</Field.HelperText>}
+    </Field.Root>
+  )
+}

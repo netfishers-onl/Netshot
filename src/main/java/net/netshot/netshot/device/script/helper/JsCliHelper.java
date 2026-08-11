@@ -42,6 +42,9 @@ import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.device.credentials.DeviceSshKeyAccount;
+import net.netshot.netshot.vault.VaultException;
+import net.netshot.netshot.vault.VaultManager;
+import net.netshot.netshot.vault.VaultableSecret;
 import net.netshot.netshot.work.TaskContext;
 
 /**
@@ -93,13 +96,14 @@ public class JsCliHelper {
 		if (accessDef.getProtocol() == DriverProtocol.SSH) {
 			Ssh ssh;
 			if (credentialSet instanceof DeviceSshKeyAccount sshKeyAccount) {
-				ssh = new Ssh(host, port, sshKeyAccount.getUsername(),
-					sshKeyAccount.getPrivateKey(), sshKeyAccount.getPassword(), this.taskContext);
+				ssh = new Ssh(host, port, resolveSecret(sshKeyAccount.getUsernameSecret()),
+					resolveSecret(sshKeyAccount.getPrivateKeySecret()),
+					resolveSecret(sshKeyAccount.getPasswordSecret()), this.taskContext);
 			}
 			else {
 				DeviceSshAccount sshAccount = (DeviceSshAccount) credentialSet;
-				ssh = new Ssh(host, port, sshAccount.getUsername(),
-					sshAccount.getPassword(), this.taskContext);
+				ssh = new Ssh(host, port, resolveSecret(sshAccount.getUsernameSecret()),
+					resolveSecret(sshAccount.getPasswordSecret()), this.taskContext);
 			}
 			ssh.applySshConfig(accessDef.getSshConfig());
 			ssh.setHostKeyVerifier(this.accessManager.resolveSshHostKeyVerifier(accessDef));
@@ -108,6 +112,22 @@ public class JsCliHelper {
 		Telnet telnet = new Telnet(host, port, this.taskContext);
 		telnet.setTelnetConfig(accessDef.getTelnetConfig());
 		return telnet;
+	}
+
+	/**
+	 * Resolves a credential field's actual value (local, or from Vault),
+	 * wrapping a Vault failure as an {@link IOException} so it's handled the
+	 * same way as any other connection/resolution failure by callers.
+	 * @param secret the vaultable secret to resolve
+	 * @return the resolved value
+	 */
+	private static String resolveSecret(VaultableSecret secret) throws IOException {
+		try {
+			return VaultManager.resolve(secret);
+		}
+		catch (VaultException e) {
+			throw new IOException("Unable to resolve a Vault-backed credential: " + e.getMessage(), e);
+		}
 	}
 
 	/**
@@ -252,19 +272,27 @@ public class JsCliHelper {
 		if (command == null) {
 			command = "";
 		}
-		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
-			Matcher.quoteReplacement(account.getUsername()));
-		if (this.taskContext.isTracing()) {
-			// Log before injecting secrets
-			this.taskContext.trace("About to send the following (secrets not inserted):");
-			this.taskContext.trace(command);
-			this.taskContext.hexTrace(command);
+		try {
+			command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
+				Matcher.quoteReplacement(resolveSecret(account.getUsernameSecret())));
+			if (this.taskContext.isTracing()) {
+				// Log before injecting secrets
+				this.taskContext.trace("About to send the following (secrets not inserted):");
+				this.taskContext.trace(command);
+				this.taskContext.hexTrace(command);
+			}
+			log.debug("Command to be sent (secrets not inserted): '{}'.", command);
+			command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
+				Matcher.quoteReplacement(StringUtils.defaultString(resolveSecret(account.getPasswordSecret()))));
+			command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_SUPERPASSWORD),
+				Matcher.quoteReplacement(StringUtils.defaultString(resolveSecret(account.getSuperPasswordSecret()))));
 		}
-		log.debug("Command to be sent (secrets not inserted): '{}'.", command);
-		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
-			Matcher.quoteReplacement(StringUtils.defaultString(account.getPassword())));
-		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_SUPERPASSWORD),
-			Matcher.quoteReplacement(StringUtils.defaultString(account.getSuperPassword())));
+		catch (IOException e) {
+			log.error("Unable to resolve a Vault-backed credential.", e);
+			this.taskContext.error("Unable to connect: " + e.getMessage());
+			this.errored = true;
+			return null;
+		}
 
 		// Prepare CommandInput
 		Cli.CommandInput input = new Cli.CommandInput(command, expects);

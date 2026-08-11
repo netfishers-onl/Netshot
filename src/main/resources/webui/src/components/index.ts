@@ -26,6 +26,7 @@ export { default as Slot } from "./Slot"
 export { default as SidebarLink } from "./SidebarLink"
 export { default as SigninIllustration } from "./SigninIllustration"
 export { default as Switch } from "./Switch"
+export { default as VaultableInput } from "./VaultableInput"
 
 export * from "./autocomplete"
 export * from "./entity"

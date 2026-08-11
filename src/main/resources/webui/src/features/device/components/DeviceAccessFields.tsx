@@ -1,12 +1,14 @@
 import { useDeviceCredentialSetAuthTypeOptions, useDeviceCredentialSetPrivateKeyTypeOptions } from "@/features/administration/hooks"
+import { useVaultInstances } from "@/features/administration/api"
 import FormControl, { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import Switch from "@/components/Switch"
+import VaultableInput from "@/components/VaultableInput"
 import BulkEditLockToggle from "./BulkEditLockToggle"
-import { CredentialSet, CredentialSetType, DeviceAccess, DeviceAccessDefinition, DeviceTypeProtocol, HashingAlgorithm, HttpsCaTrustMode, SshHostKeyVerification } from "@/types"
-import { Collapsible, Field, Group, Separator, Stack, Text } from "@chakra-ui/react"
+import { CredentialSet, CredentialSetType, DeviceAccess, DeviceAccessDefinition, DeviceTypeProtocol, HashingAlgorithm, HttpsCaTrustMode, Option, SshHostKeyVerification, VaultableFieldRefs } from "@/types"
+import { Collapsible, Separator, Stack, Text } from "@chakra-ui/react"
 import { useEffect, useMemo, useState } from "react"
-import { Control, useController, useFieldArray, useWatch } from "react-hook-form"
+import { Control, useController, useFieldArray, UseFormSetValue, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { LuChevronRight } from "react-icons/lu"
 import { useCredentialSets } from "../api"
@@ -42,11 +44,13 @@ export type DeviceAccessFormValue = {
   sshTrustedHostKeys: string
   httpsCaTrustMode: HttpsCaTrustMode
   httpsCustomCaCertificate: string
-}
+} & VaultableFieldRefs
 
 export type DeviceAccessFieldsProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue: UseFormSetValue<any>
   accessDefinitions: Record<string, DeviceAccessDefinition> | undefined
   /** Bulk-edit mode: every row starts locked ("leave unchanged on all selected devices") and must be explicitly unlocked to be included in the payload. */
   bulk?: boolean
@@ -114,14 +118,20 @@ function getCompatibleCredentialTypes(protocol: string): CredentialSetType[] {
 export type SpecificCredentialFieldsProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue: UseFormSetValue<any>
   namePrefix: string
   type: CredentialSetType
   /** True when editing an access that already has a stored secret - shows the lock icon and preserves it unless explicitly changed. */
   allowUnchanged: boolean
+  /** Available Vault instances, as VaultableInput options. */
+  vaultInstances: Option<number>[]
 }
 
 /** Renders exactly the fields relevant to one credential type, nested under `namePrefix`. */
-export function SpecificCredentialFields({ control, namePrefix, type, allowUnchanged }: SpecificCredentialFieldsProps) {
+export function SpecificCredentialFields({
+  control, setValue, namePrefix, type, allowUnchanged, vaultInstances,
+}: SpecificCredentialFieldsProps) {
   const { t } = useTranslation()
   const authTypeOptions = useDeviceCredentialSetAuthTypeOptions()
   const privateKeyTypeOptions = useDeviceCredentialSetPrivateKeyTypeOptions()
@@ -138,29 +148,35 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
   if (type === CredentialSetType.SSH || type === CredentialSetType.Telnet) {
     return (
       <>
-        <FormControl
+        <VaultableInput
           required
           label={t("user.username")}
           placeholder={t("common.eG", { example: "admin" })}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.username`}
+          vaultInstances={vaultInstances}
         />
-        <FormControl
+        <VaultableInput
           required={!allowUnchanged}
           allowUnchanged={allowUnchanged}
-          type={FormControlType.Password}
+          fieldType={FormControlType.Password}
           label={t("auth.password")}
           placeholder={t("auth.typeYourPassword")}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.password`}
+          vaultInstances={vaultInstances}
         />
-        <FormControl
+        <VaultableInput
           allowUnchanged={allowUnchanged}
-          type={FormControlType.Password}
+          fieldType={FormControlType.Password}
           label={t("network.superPassword")}
           placeholder={t("network.typeSuperPassword")}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.superPassword`}
+          vaultInstances={vaultInstances}
         />
       </>
     )
@@ -168,40 +184,48 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
   if (type === CredentialSetType.SSHKey) {
     return (
       <>
-        <FormControl
+        <VaultableInput
           required
           label={t("user.username")}
           placeholder={t("common.eG", { example: "admin" })}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.username`}
+          vaultInstances={vaultInstances}
         />
-        <FormControl
+        <VaultableInput
           required={!allowUnchanged}
           allowUnchanged={allowUnchanged}
           autosize
           mono
           rows={2}
-          type={FormControlType.LongText}
+          fieldType={FormControlType.LongText}
           label={t("network.sshPrivateKey")}
           placeholder={t("network.typePrivateKey")}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.privateKey`}
+          vaultInstances={vaultInstances}
         />
-        <FormControl
+        <VaultableInput
           allowUnchanged={allowUnchanged}
-          type={FormControlType.Password}
+          fieldType={FormControlType.Password}
           label={t("network.passphrase")}
           placeholder={t("network.typePassphrase")}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.password`}
+          vaultInstances={vaultInstances}
         />
-        <FormControl
+        <VaultableInput
           allowUnchanged={allowUnchanged}
-          type={FormControlType.Password}
+          fieldType={FormControlType.Password}
           label={t("network.superPassword")}
           placeholder={t("network.typeSuperPassword")}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.superPassword`}
+          vaultInstances={vaultInstances}
         />
       </>
     )
@@ -209,110 +233,110 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
   if (type === CredentialSetType.HTTP) {
     return (
       <>
-        <FormControl
+        <VaultableInput
           label={t("user.username")}
           placeholder={t("common.eG", { example: "admin" })}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.username`}
+          vaultInstances={vaultInstances}
         />
-        <FormControl
+        <VaultableInput
           required={!allowUnchanged}
           allowUnchanged={allowUnchanged}
-          type={FormControlType.Password}
+          fieldType={FormControlType.Password}
           label={t("auth.password")}
           placeholder={t("auth.typeYourPassword")}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.password`}
+          vaultInstances={vaultInstances}
         />
       </>
     )
   }
   if (type === CredentialSetType.SNMP_V1 || type === CredentialSetType.SNMP_V2C) {
     return (
-      <FormControl
+      <VaultableInput
         required={!allowUnchanged}
         allowUnchanged={allowUnchanged}
-        type={FormControlType.Password}
+        fieldType={FormControlType.Password}
         label={t("common.community")}
         placeholder={t("common.eG", { example: "public" })}
         control={control}
+        setValue={setValue}
         name={`${namePrefix}.community`}
+        vaultInstances={vaultInstances}
       />
     )
   }
   if (type === CredentialSetType.SNMP_V3) {
     return (
       <>
-        <FormControl
+        <VaultableInput
           required
           label={t("user.username")}
           placeholder={t("common.eG", { example: "admin" })}
           control={control}
+          setValue={setValue}
           name={`${namePrefix}.username`}
+          vaultInstances={vaultInstances}
         />
-        <Field.Root required={!allowUnchanged && hasAuth}>
-          <Field.Label>
-            {t("network.authKey")}
-            {!allowUnchanged && hasAuth && <Field.RequiredIndicator />}
-          </Field.Label>
-          <Group w="full">
-            <Select
-              required
-              fieldProps={{ flex: hasAuth ? "1" : "1 0 100%", w: "auto" }}
-              control={control}
-              name={`${namePrefix}.authType`}
-              options={authTypeOptions.options}
-              onSelectItem={(value) => {
-                if (value === HashingAlgorithm.NONE) {
-                  privTypeField.onChange(HashingAlgorithm.NONE)
-                  privKeyField.onChange("")
-                  authKeyField.onChange("")
-                }
-              }}
-            />
-            {hasAuth && (
-              <FormControl
-                flex="2"
-                type={FormControlType.Password}
-                allowUnchanged={allowUnchanged}
-                placeholder={t("common.eG", { example: t("credential.secretKey") })}
-                control={control}
-                name={`${namePrefix}.authKey`}
-              />
-            )}
-          </Group>
-        </Field.Root>
-        <Field.Root required={!allowUnchanged && hasPriv}>
-          <Field.Label>
-            {t("network.privKey")}
-            {!allowUnchanged && hasPriv && <Field.RequiredIndicator />}
-          </Field.Label>
-          <Group w="full">
-            <Select
-              required
-              disabled={!hasAuth}
-              fieldProps={{ flex: hasPriv ? "1" : "1 0 100%", w: "auto" }}
-              control={control}
-              name={`${namePrefix}.privType`}
-              options={privateKeyTypeOptions.options}
-              onSelectItem={(value) => {
-                if (value === HashingAlgorithm.NONE) {
-                  privKeyField.onChange("")
-                }
-              }}
-            />
-            {hasPriv && (
-              <FormControl
-                flex="2"
-                type={FormControlType.Password}
-                allowUnchanged={allowUnchanged}
-                placeholder={t("common.eG", { example: t("credential.secretKey") })}
-                control={control}
-                name={`${namePrefix}.privKey`}
-              />
-            )}
-          </Group>
-        </Field.Root>
+        <Select
+          required
+          fieldProps={{ w: hasAuth ? "50%" : "full" }}
+          control={control}
+          name={`${namePrefix}.authType`}
+          options={authTypeOptions.options}
+          label={t("credential.authType")}
+          onSelectItem={(value) => {
+            if (value === HashingAlgorithm.NONE) {
+              privTypeField.onChange(HashingAlgorithm.NONE)
+              privKeyField.onChange("")
+              authKeyField.onChange("")
+            }
+          }}
+        />
+        {hasAuth && (
+          <VaultableInput
+            required={!allowUnchanged}
+            allowUnchanged={allowUnchanged}
+            fieldType={FormControlType.Password}
+            label={t("network.authKeySecret")}
+            placeholder={t("common.eG", { example: t("credential.secretKey") })}
+            control={control}
+            setValue={setValue}
+            name={`${namePrefix}.authKey`}
+            vaultInstances={vaultInstances}
+          />
+        )}
+        <Select
+          required
+          disabled={!hasAuth}
+          fieldProps={{ w: hasPriv ? "50%" : "full" }}
+          control={control}
+          name={`${namePrefix}.privType`}
+          options={privateKeyTypeOptions.options}
+          label={t("credential.privType")}
+          onSelectItem={(value) => {
+            if (value === HashingAlgorithm.NONE) {
+              privKeyField.onChange("")
+            }
+          }}
+        />
+        {hasPriv && (
+          <VaultableInput
+            required={!allowUnchanged}
+            allowUnchanged={allowUnchanged}
+            fieldType={FormControlType.Password}
+            label={t("network.privKeySecret")}
+            placeholder={t("common.eG", { example: t("credential.secretKey") })}
+            control={control}
+            setValue={setValue}
+            name={`${namePrefix}.privKey`}
+            vaultInstances={vaultInstances}
+          />
+        )}
       </>
     )
   }
@@ -410,14 +434,19 @@ function AccessRowSummary({
 
 function AccessRow({
   control,
+  setValue,
   index,
   value,
+  vaultInstances,
   bulk = false,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue: UseFormSetValue<any>
   index: number
   value: DeviceAccessFormValue
+  vaultInstances: Option<number>[]
   bulk?: boolean
 }) {
   const { t } = useTranslation()
@@ -572,9 +601,11 @@ function AccessRow({
                   {effectiveSpecificType && (
                     <SpecificCredentialFields
                       control={control}
+                      setValue={setValue}
                       namePrefix={`accesses.${index}`}
                       type={effectiveSpecificType}
                       allowUnchanged={allowUnchanged}
+                      vaultInstances={vaultInstances}
                     />
                   )}
                 </>
@@ -689,9 +720,15 @@ function preserveSecret(value: string | null | undefined): string | null {
  * defined just for this access). Backed by an `accesses` field array on the
  * form, kept in sync with the driver's access definitions.
  */
-export default function DeviceAccessFields({ control, accessDefinitions, bulk = false }: DeviceAccessFieldsProps) {
+export default function DeviceAccessFields({ control, setValue, accessDefinitions, bulk = false }: DeviceAccessFieldsProps) {
   const { t } = useTranslation()
   const { fields, replace } = useFieldArray({ control, name: "accesses" })
+  const { data: vaultInstanceList } = useVaultInstances()
+
+  const vaultInstances = useMemo(
+    () => (vaultInstanceList ?? []).map((instance) => ({ label: instance.name, value: instance.id })),
+    [vaultInstanceList]
+  )
 
   const accessNamesKey = Object.keys(accessDefinitions ?? {}).sort().join(",")
 
@@ -729,6 +766,20 @@ export default function DeviceAccessFields({ control, accessDefinitions, bulk = 
           sshTrustedHostKeys: existing?.sshTrustedHostKeys ?? "",
           httpsCaTrustMode: existing?.httpsCaTrustMode ?? HttpsCaTrustMode.SystemTruststore,
           httpsCustomCaCertificate: existing?.httpsCustomCaCertificate ?? "",
+          usernameVaultInstanceId: existing?.usernameVaultInstanceId ?? null,
+          usernameVaultPath: existing?.usernameVaultPath ?? "",
+          passwordVaultInstanceId: existing?.passwordVaultInstanceId ?? null,
+          passwordVaultPath: existing?.passwordVaultPath ?? "",
+          superPasswordVaultInstanceId: existing?.superPasswordVaultInstanceId ?? null,
+          superPasswordVaultPath: existing?.superPasswordVaultPath ?? "",
+          privateKeyVaultInstanceId: existing?.privateKeyVaultInstanceId ?? null,
+          privateKeyVaultPath: existing?.privateKeyVaultPath ?? "",
+          communityVaultInstanceId: existing?.communityVaultInstanceId ?? null,
+          communityVaultPath: existing?.communityVaultPath ?? "",
+          authKeyVaultInstanceId: existing?.authKeyVaultInstanceId ?? null,
+          authKeyVaultPath: existing?.authKeyVaultPath ?? "",
+          privKeyVaultInstanceId: existing?.privKeyVaultInstanceId ?? null,
+          privKeyVaultPath: existing?.privKeyVaultPath ?? "",
         }
       })
     )
@@ -780,8 +831,10 @@ export default function DeviceAccessFields({ control, accessDefinitions, bulk = 
                     <AccessRow
                       key={fields[index].id}
                       control={control}
+                      setValue={setValue}
                       index={index}
                       value={fields[index] as unknown as DeviceAccessFormValue}
+                      vaultInstances={vaultInstances}
                       bulk={bulk}
                     />
                   )
@@ -812,6 +865,12 @@ function buildSpecificCredentialPayload(access: DeviceAccessFormValue): Credenti
         username: access.username,
         password: secret(access.password),
         superPassword: secret(access.superPassword),
+        usernameVaultInstanceId: access.usernameVaultInstanceId,
+        usernameVaultPath: access.usernameVaultPath,
+        passwordVaultInstanceId: access.passwordVaultInstanceId,
+        passwordVaultPath: access.passwordVaultPath,
+        superPasswordVaultInstanceId: access.superPasswordVaultInstanceId,
+        superPasswordVaultPath: access.superPasswordVaultPath,
       } as CredentialSet
     case CredentialSetType.SSHKey:
       return {
@@ -820,16 +879,33 @@ function buildSpecificCredentialPayload(access: DeviceAccessFormValue): Credenti
         privateKey: secret(access.privateKey),
         password: secret(access.password),
         superPassword: secret(access.superPassword),
+        usernameVaultInstanceId: access.usernameVaultInstanceId,
+        usernameVaultPath: access.usernameVaultPath,
+        privateKeyVaultInstanceId: access.privateKeyVaultInstanceId,
+        privateKeyVaultPath: access.privateKeyVaultPath,
+        passwordVaultInstanceId: access.passwordVaultInstanceId,
+        passwordVaultPath: access.passwordVaultPath,
+        superPasswordVaultInstanceId: access.superPasswordVaultInstanceId,
+        superPasswordVaultPath: access.superPasswordVaultPath,
       } as CredentialSet
     case CredentialSetType.HTTP:
       return {
         type,
         username: access.username || undefined,
         password: secret(access.password),
+        usernameVaultInstanceId: access.usernameVaultInstanceId,
+        usernameVaultPath: access.usernameVaultPath,
+        passwordVaultInstanceId: access.passwordVaultInstanceId,
+        passwordVaultPath: access.passwordVaultPath,
       } as CredentialSet
     case CredentialSetType.SNMP_V1:
     case CredentialSetType.SNMP_V2C:
-      return { type, community: secret(access.community) } as CredentialSet
+      return {
+        type,
+        community: secret(access.community),
+        communityVaultInstanceId: access.communityVaultInstanceId,
+        communityVaultPath: access.communityVaultPath,
+      } as CredentialSet
     case CredentialSetType.SNMP_V3:
       return {
         type,
@@ -838,6 +914,12 @@ function buildSpecificCredentialPayload(access: DeviceAccessFormValue): Credenti
         authKey: secret(access.authKey),
         privType: access.privType,
         privKey: secret(access.privKey),
+        usernameVaultInstanceId: access.usernameVaultInstanceId,
+        usernameVaultPath: access.usernameVaultPath,
+        authKeyVaultInstanceId: access.authKeyVaultInstanceId,
+        authKeyVaultPath: access.authKeyVaultPath,
+        privKeyVaultInstanceId: access.privKeyVaultInstanceId,
+        privKeyVaultPath: access.privKeyVaultPath,
       } as CredentialSet
     default:
       return undefined

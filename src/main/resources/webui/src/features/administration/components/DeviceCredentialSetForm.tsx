@@ -1,11 +1,13 @@
-import { FormControl } from "@/components"
+import { FormControl, VaultableInput } from "@/components"
 import DomainSelect from "./DomainSelect"
 import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
-import { CredentialSetType, HashingAlgorithm } from "@/types"
-import { Field, Group, Stack } from "@chakra-ui/react"
+import { CredentialSetType, HashingAlgorithm, VaultableFieldRefs } from "@/types"
+import { Stack } from "@chakra-ui/react"
+import { useMemo } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { useVaultInstances } from "../api"
 import {
   useDeviceCredentialSetAuthTypeOptions,
   useDeviceCredentialSetPrivateKeyTypeOptions,
@@ -25,7 +27,7 @@ export type DeviceCredentialSetForm = {
   password?: string | null
   superPassword?: string | null
   privateKey?: string | null
-}
+} & VaultableFieldRefs
 
 export type DeviceCredentialSetFormProps = {
   freezeType?: boolean
@@ -39,6 +41,12 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
   const deviceCredentialSetTypeOptions = useDeviceCredentialSetTypeOptions()
   const deviceCredentialSetAuthTypeOptions = useDeviceCredentialSetAuthTypeOptions()
   const deviceCredentialSetPrivateKeyTypeOptions = useDeviceCredentialSetPrivateKeyTypeOptions()
+  const { data: vaultInstanceList } = useVaultInstances()
+
+  const vaultInstances = useMemo(
+    () => (vaultInstanceList ?? []).map((instance) => ({ label: instance.name, value: instance.id })),
+    [vaultInstanceList]
+  )
 
   const type = useWatch({
     control: form.control,
@@ -81,179 +89,191 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
       />
       {type === CredentialSetType.SNMP_V3 && (
         <>
-          <FormControl
+          <VaultableInput
             label={t("user.username")}
             placeholder={t("common.eG", { example: "admin" })}
             required
             control={form.control}
+            setValue={form.setValue}
             name="username"
+            vaultInstances={vaultInstances}
           />
-          <Field.Root required={!freezePasswords && hasAuth}>
-            <Field.Label>
-              {t("network.authKey")}
-              {!freezePasswords && hasAuth && <Field.RequiredIndicator />}
-            </Field.Label>
-            <Group w="full">
-              <Select
-                required
-                fieldProps={{ flex: hasAuth ? "1" : "1 0 100%", w: "auto" }}
-                control={form.control}
-                name="authType"
-                options={deviceCredentialSetAuthTypeOptions.options}
-                onSelectItem={(value) => {
-                  if (value === HashingAlgorithm.NONE) {
-                    form.setValue("privType", HashingAlgorithm.NONE)
-                    form.setValue("privKey", "")
-                    form.setValue("authKey", "")
-                  }
-                }}
-              />
-              {hasAuth && (
-                <FormControl
-                  flex="2"
-                  type={FormControlType.Password}
-                  placeholder={t("common.eG", { example: t("credential.secretKey") })}
-                  required={!freezePasswords}
-                  allowUnchanged={freezePasswords}
-                  control={form.control}
-                  name="authKey"
-                />
-              )}
-            </Group>
-          </Field.Root>
-          <Field.Root required={!freezePasswords && hasPriv}>
-            <Field.Label>
-              {t("network.privKey")}
-              {!freezePasswords && hasPriv && <Field.RequiredIndicator />}
-            </Field.Label>
-            <Group w="full">
-              <Select
-                required
-                disabled={!hasAuth}
-                fieldProps={{ flex: hasPriv ? "1" : "1 0 100%", w: "auto" }}
-                control={form.control}
-                name="privType"
-                options={deviceCredentialSetPrivateKeyTypeOptions.options}
-                onSelectItem={(value) => {
-                  if (value === HashingAlgorithm.NONE) {
-                    form.setValue("privKey", "")
-                  }
-                }}
-              />
-              {hasPriv && (
-                <FormControl
-                  flex="2"
-                  type={FormControlType.Password}
-                  placeholder={t("common.eG", { example: t("credential.secretKey") })}
-                  required={!freezePasswords}
-                  allowUnchanged={freezePasswords}
-                  control={form.control}
-                  name="privKey"
-                />
-              )}
-            </Group>
-          </Field.Root>
+          <Select
+            required
+            fieldProps={{ w: hasAuth ? "50%" : "full" }}
+            control={form.control}
+            name="authType"
+            options={deviceCredentialSetAuthTypeOptions.options}
+            label={t("credential.authType")}
+            onSelectItem={(value) => {
+              if (value === HashingAlgorithm.NONE) {
+                form.setValue("privType", HashingAlgorithm.NONE)
+                form.setValue("privKey", "")
+                form.setValue("authKey", "")
+              }
+            }}
+          />
+          {hasAuth && (
+            <VaultableInput
+              label={t("network.authKeySecret")}
+              placeholder={t("common.eG", { example: t("credential.secretKey") })}
+              fieldType={FormControlType.Password}
+              required={!freezePasswords}
+              allowUnchanged={freezePasswords}
+              control={form.control}
+              setValue={form.setValue}
+              name="authKey"
+              vaultInstances={vaultInstances}
+            />
+          )}
+          <Select
+            required
+            disabled={!hasAuth}
+            fieldProps={{ w: hasPriv ? "50%" : "full" }}
+            control={form.control}
+            name="privType"
+            options={deviceCredentialSetPrivateKeyTypeOptions.options}
+            label={t("credential.privType")}
+            onSelectItem={(value) => {
+              if (value === HashingAlgorithm.NONE) {
+                form.setValue("privKey", "")
+              }
+            }}
+          />
+          {hasPriv && (
+            <VaultableInput
+              label={t("network.privKeySecret")}
+              placeholder={t("common.eG", { example: t("credential.secretKey") })}
+              fieldType={FormControlType.Password}
+              required={!freezePasswords}
+              allowUnchanged={freezePasswords}
+              control={form.control}
+              setValue={form.setValue}
+              name="privKey"
+              vaultInstances={vaultInstances}
+            />
+          )}
         </>
       )}
       {[CredentialSetType.SSH, CredentialSetType.Telnet].includes(type) && (
         <>
-          <FormControl
+          <VaultableInput
             required
             label={t("user.username")}
             placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
+            setValue={form.setValue}
             name="username"
+            vaultInstances={vaultInstances}
           />
-          <FormControl
+          <VaultableInput
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
-            type={FormControlType.Password}
+            fieldType={FormControlType.Password}
             label={t("auth.password")}
             placeholder={t("auth.typeYourPassword")}
             control={form.control}
+            setValue={form.setValue}
             name="password"
+            vaultInstances={vaultInstances}
           />
-          <FormControl
+          <VaultableInput
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
-            type={FormControlType.Password}
+            fieldType={FormControlType.Password}
             label={t("network.superPassword")}
             placeholder={t("network.typeSuperPassword")}
             control={form.control}
+            setValue={form.setValue}
             name="superPassword"
+            vaultInstances={vaultInstances}
           />
         </>
       )}
       {type === CredentialSetType.SSHKey && (
         <>
-          <FormControl
+          <VaultableInput
             required
             label={t("user.username")}
             placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
+            setValue={form.setValue}
             name="username"
+            vaultInstances={vaultInstances}
           />
-          <FormControl
+          <VaultableInput
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             autosize
             mono
             rows={2}
-            type={FormControlType.LongText}
+            fieldType={FormControlType.LongText}
             label={t("network.sshPrivateKey")}
             placeholder={t("network.typePrivateKey")}
             control={form.control}
+            setValue={form.setValue}
             name="privateKey"
+            vaultInstances={vaultInstances}
           />
-          <FormControl
+          <VaultableInput
             allowUnchanged={freezePasswords}
-            type={FormControlType.Password}
+            fieldType={FormControlType.Password}
             label={t("network.passphrase")}
             placeholder={t("network.typePassphrase")}
             control={form.control}
+            setValue={form.setValue}
             name="password"
+            vaultInstances={vaultInstances}
           />
-          <FormControl
+          <VaultableInput
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
-            type={FormControlType.Password}
+            fieldType={FormControlType.Password}
             label={t("network.superPassword")}
             placeholder={t("network.typeSuperPassword")}
             control={form.control}
+            setValue={form.setValue}
             name="superPassword"
+            vaultInstances={vaultInstances}
           />
         </>
       )}
       {[CredentialSetType.SNMP_V1, CredentialSetType.SNMP_V2C].includes(
         type
       ) && (
-        <FormControl
+        <VaultableInput
           label={t("common.community")}
           placeholder={t("common.eG", { example: "public" })}
-          type={FormControlType.Password}
+          fieldType={FormControlType.Password}
           required={!freezePasswords}
           allowUnchanged={freezePasswords}
           control={form.control}
+          setValue={form.setValue}
           name="community"
+          vaultInstances={vaultInstances}
         />
       )}
       {type === CredentialSetType.HTTP && (
         <>
-          <FormControl
+          <VaultableInput
             label={t("user.username")}
             placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
+            setValue={form.setValue}
             name="username"
+            vaultInstances={vaultInstances}
             helperText={t("credential.httpUsernameHelperText")}
           />
-          <FormControl
+          <VaultableInput
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
-            type={FormControlType.Password}
+            fieldType={FormControlType.Password}
             label={t("auth.password")}
             placeholder={t("auth.typeYourPassword")}
             control={form.control}
+            setValue={form.setValue}
             name="password"
+            vaultInstances={vaultInstances}
             helperText={t("credential.httpPasswordHelperText")}
           />
         </>

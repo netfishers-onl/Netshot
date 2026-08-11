@@ -33,9 +33,31 @@ import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
+import net.netshot.netshot.vault.VaultException;
+import net.netshot.netshot.vault.VaultManager;
+import net.netshot.netshot.vault.VaultableSecret;
 
 @Slf4j
 public class DeviceListExtractor extends Netshot {
+
+	/**
+	 * Resolves a credential field's actual value (local, or from Vault),
+	 * logging a warning and returning an empty string on failure rather than
+	 * aborting the whole export for one bad/unreachable Vault-backed field.
+	 * @param secret the vaultable secret to resolve
+	 * @param device the device the secret belongs to, used for the warning log message
+	 * @return the resolved value, or an empty string on failure
+	 */
+	private static String resolveSecret(VaultableSecret secret, Device device) {
+		try {
+			String value = VaultManager.resolve(secret);
+			return value == null ? "" : value;
+		}
+		catch (VaultException e) {
+			log.warn("Unable to resolve a Vault-backed credential for device {}: {}", device.getName(), e.getMessage());
+			return "";
+		}
+	}
 
 	/**
 	 * Initializes the logging.
@@ -132,7 +154,7 @@ public class DeviceListExtractor extends Netshot {
 				fields.add("");							// Col. 6 = SysObjectID
 				fields.add("");							// Col. 7 = DCR Device Type
 				fields.add("");							// Col. 8 = MDF Type
-				fields.add(community == null ? "" : community.getCommunity());			// Col. 9 = SNMP RO <<<
+				fields.add(community == null ? "" : resolveSecret(community.getCommunitySecret(), device));			// Col. 9 = SNMP RO <<<
 				fields.add("");							// Col. 10 = SNMP RW
 				fields.add("");							// Col. 11 = SNMPv3 User Name
 				fields.add("");							// Col. 12 = SNMPv3 Auth Pass 
@@ -140,9 +162,9 @@ public class DeviceListExtractor extends Netshot {
 				fields.add("");							// Col. 14 = SNMPv3 Auth Algorithm
 				fields.add("");							// Col. 15 = RX Boot Mode User
 				fields.add("");							// Col. 16 = RX Boot Mode Pass
-				fields.add(cliAccount == null ? "" : cliAccount.getUsername());			// Col. 17 = Primary User <<<
-				fields.add(cliAccount == null ? "" : cliAccount.getPassword());			// Col. 18 = Primary Pass <<<
-				fields.add(cliAccount == null ? "" : cliAccount.getSuperPassword());	// Col. 19 = Primary Enable Pass <<<
+				fields.add(cliAccount == null ? "" : resolveSecret(cliAccount.getUsernameSecret(), device));			// Col. 17 = Primary User <<<
+				fields.add(cliAccount == null ? "" : resolveSecret(cliAccount.getPasswordSecret(), device));			// Col. 18 = Primary Pass <<<
+				fields.add(cliAccount == null ? "" : resolveSecret(cliAccount.getSuperPasswordSecret(), device));	// Col. 19 = Primary Enable Pass <<<
 				fields.add("");							// Col. 20 = HTTP User
 				fields.add("");							// Col. 21 = HTTP Pass
 				fields.add("");							// Col. 22 = HTTP Mode

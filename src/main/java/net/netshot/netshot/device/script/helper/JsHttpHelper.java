@@ -87,9 +87,9 @@ public class JsHttpHelper {
 		int port = this.accessManager.resolvePort(candidateAccessDef);
 		this.taskContext.debug("Trying access '{}' ({}) using credentials '{}', at {}:{}.",
 			candidateAccessDef.getName(), candidateAccessDef.getProtocol(), credentialSet.getName(), host, port);
-		Http http = new Http(host, port, httpConfig.isTls(), this.taskContext);
-		this.accessManager.applyHttpsTrustPolicy(candidateAccessDef, http);
-		return http;
+		Http httpClient = new Http(host, port, httpConfig.isTls(), this.taskContext);
+		this.accessManager.applyHttpsTrustPolicy(candidateAccessDef, httpClient);
+		return httpClient;
 	}
 
 	private void ensureResolved() throws IOException {

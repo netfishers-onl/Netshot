@@ -5,11 +5,15 @@ import {
   DeviceSoftwareLevel,
   GroupType,
   HashingAlgorithm,
+  HttpsCaTrustMode,
   RuleType,
   SimpleDevice,
   TaskScheduleMode,
   TaskScheduleType,
   TaskStatus,
+  VaultAuthMethod,
+  VaultInstanceType,
+  VaultableFieldRefs,
 } from "@/types"
 
 export type PaginationQueryParams = {
@@ -49,6 +53,26 @@ export type DeviceCredentialPayload = {
   password?: string
   superPassword?: string
   privateKey?: string
+} & VaultableFieldRefs
+
+export type VaultInstancePayload = {
+  name: string
+  type: VaultInstanceType
+  baseUrl: string
+  namespace?: string
+  httpsCaTrustMode: HttpsCaTrustMode
+  httpsCustomCaCertificate?: string
+  kvMountPath: string
+  authMethod: VaultAuthMethod
+  appRoleMountPath?: string
+  appRoleId?: string
+  appRoleSecretId?: string
+  jwtMountPath?: string
+  jwtIdpTokenEndpoint?: string
+  jwtClientId?: string
+  jwtClientSecret?: string
+  jwtVaultRole?: string
+  jwtScope?: string
 }
 
 export type ConfigQueryParams = {

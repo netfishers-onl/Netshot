@@ -8,6 +8,7 @@ import {
   AdministrationDriverScreen,
   AdministrationScreen,
   AdministrationUserScreen,
+  AdministrationVaultInstanceScreen,
   AdministrationWebhookScreen,
 } from "@/features/administration"
 import { SigninScreen } from "@/features/auth"
@@ -172,6 +173,7 @@ function App() {
                           <Route path="driver" element={<AdministrationDriverScreen />} />
                           <Route path="api-token" element={<AdministrationApiTokenScreen />} />
                           <Route path="webhook" element={<AdministrationWebhookScreen />} />
+                          <Route path="vault" element={<AdministrationVaultInstanceScreen />} />
                           <Route path="clustering" element={<AdministrationClusteringScreen />} />
                         </Route>
                       </Route>

@@ -46,6 +46,7 @@ import net.netshot.netshot.rest.RestViews.ClusteringView;
 	@Type(value = LoadTasksMessage.class, name = "LoadTasks"),
 	@Type(value = AssignTasksMessage.class, name = "AssignTasks"),
 	@Type(value = AutoSnapshotMessage.class, name = "AutoSnapshot"),
+	@Type(value = VaultInstanceChangedMessage.class, name = "VaultInstanceChanged"),
 })
 public abstract class ClusterMessage {
 

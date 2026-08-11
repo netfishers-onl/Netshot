@@ -29,6 +29,9 @@ import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.credentials.DeviceSnmpv1Community;
 import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import net.netshot.netshot.device.credentials.DeviceSnmpv3Community;
+import net.netshot.netshot.vault.VaultException;
+import net.netshot.netshot.vault.VaultManager;
+import net.netshot.netshot.vault.VaultableSecret;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.ScopedPDU;
@@ -123,12 +126,14 @@ public class Snmp extends Poller implements Client {
 	 */
 	public Snmp(NetworkAddress address, int port, DeviceSnmpCommunity community) throws IOException {
 		if (community instanceof DeviceSnmpv1Community) {
-			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), port), new OctetString(community.getCommunity()));
+			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), port),
+				new OctetString(resolveSecret(community.getCommunitySecret())));
 			this.target.setVersion(SnmpConstants.version1);
 			start();
 		}
 		else if (community instanceof DeviceSnmpv2cCommunity) {
-			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), port), new OctetString(community.getCommunity()));
+			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), port),
+				new OctetString(resolveSecret(community.getCommunitySecret())));
 			this.target.setVersion(SnmpConstants.version2c);
 			start();
 		}
@@ -154,7 +159,8 @@ public class Snmp extends Poller implements Client {
 			else {
 				this.target.setSecurityLevel(SecurityLevel.AUTH_PRIV);
 			}
-			this.target.setSecurityName(new OctetString(v3Credentials.getUsername()));
+			String v3Username = resolveSecret(v3Credentials.getUsernameSecret());
+			this.target.setSecurityName(new OctetString(v3Username));
 
 			// Prepare transport
 			log.debug("Auth Protocol called: {}", authType);
@@ -183,14 +189,30 @@ public class Snmp extends Poller implements Client {
 			USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
 			usm.addUser(
 				new UsmUser(
-					new OctetString(v3Credentials.getUsername()),
+					new OctetString(v3Username),
 					hasAuth ? this.authProtocol : null,
-					hasAuth ? new OctetString(v3Credentials.getAuthKey()) : null,
+					hasAuth ? new OctetString(resolveSecret(v3Credentials.getAuthKeySecret())) : null,
 					hasPriv ? this.privProtocol : null,
-					hasPriv ? new OctetString(v3Credentials.getPrivKey()) : null));
+					hasPriv ? new OctetString(resolveSecret(v3Credentials.getPrivKeySecret())) : null));
 			SecurityModels.getInstance().addSecurityModel(usm);
 
 			start();
+		}
+	}
+
+	/**
+	 * Resolves a credential field's actual value (local, or from Vault),
+	 * wrapping a Vault failure as an {@link IOException} so it's handled the
+	 * same way as any other connection failure by callers.
+	 * @param secret the vaultable secret to resolve
+	 * @return the resolved value
+	 */
+	private static String resolveSecret(VaultableSecret secret) throws IOException {
+		try {
+			return VaultManager.resolve(secret);
+		}
+		catch (VaultException e) {
+			throw new IOException("Unable to resolve a Vault-backed credential: " + e.getMessage(), e);
 		}
 	}
 

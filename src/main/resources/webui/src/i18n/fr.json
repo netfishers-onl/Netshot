@@ -930,7 +930,9 @@
       "selectAuthType": "Sélectionner un type d'authentification",
       "selectPrivType": "Sélectionner un type de privilège",
       "selectProtocol": "Sélectionner un protocole",
-      "selectCliMode": "Sélectionner le mode CLI"
+      "selectCliMode": "Sélectionner le mode CLI",
+      "authKeySecret": "Clé d'authentification",
+      "privKeySecret": "Clé de chiffrement"
     },
     "api": {
       "documentation": "Documentation API",
@@ -1086,6 +1088,47 @@
         "last7Days": "7 derniers jours",
         "last30Days": "30 derniers jours"
       }
+    },
+    "vault": {
+      "list": "Instances Vault",
+      "manage": "Gérer les instances Vault utilisées pour résoudre les identifiants d'équipement stockés dans Vault",
+      "create": "Créer une instance Vault",
+      "edit": "Modifier l'instance Vault",
+      "remove": "Supprimer l'instance Vault",
+      "namePlaceholder": "nom de l'instance Vault",
+      "typeVaultKv2": "Compatible Vault (KV v2)",
+      "connectionNotSecured": "Cette connexion n'est pas entièrement sécurisée (HTTP en clair, ou HTTPS avec une validation de certificat/nom d'hôte affaiblie)",
+      "successfullyCreated": "L'instance Vault {{name}} a été créée avec succès",
+      "successfullyUpdated": "L'instance Vault {{name}} a été mise à jour avec succès",
+      "successfullyRemoved": "L'instance Vault {{name}} a été supprimée avec succès",
+      "aboutToRemove": "Êtes-vous sûr de vouloir supprimer l'instance Vault <bold>{{name}}</bold> ?",
+      "noneConfigured": "Aucune instance Vault n'est configurée",
+      "canCreate": "Vous pouvez créer une instance Vault pour résoudre des champs d'identifiants d'équipement stockés dans Vault",
+      "baseUrl": "URL de base",
+      "namespace": "Espace de noms",
+      "namespaceHelperText": "Espace de noms Vault Enterprise (optionnel)",
+      "kvMountPath": "Chemin de montage KV",
+      "authMethod": "Méthode d'authentification",
+      "authMethodAppRole": "AppRole",
+      "authMethodJwt": "JWT",
+      "appRoleMountPath": "Chemin de montage AppRole",
+      "appRoleMountPathHelperText": "Chemin auquel la méthode d'authentification AppRole est montée dans Vault (par défaut « approle »)",
+      "roleId": "ID de rôle",
+      "secretId": "ID secret",
+      "jwtMountPath": "Chemin de montage JWT",
+      "jwtMountPathHelperText": "Chemin auquel la méthode d'authentification JWT est montée dans Vault (par défaut « jwt »)",
+      "idpTokenEndpoint": "Point de terminaison de jeton du fournisseur d'identité",
+      "clientId": "ID client",
+      "clientSecret": "Secret client",
+      "vaultRole": "Rôle Vault",
+      "vaultRoleHelperText": "Nom du rôle configuré sur la méthode d'authentification JWT de Vault (pas du fournisseur d'identité) - il indique à Vault quelles politiques accorder au jeton reçu",
+      "scope": "Portée",
+      "testConnection": "Tester la connexion",
+      "testConnectionSuccess": "La connexion à l'instance Vault a réussi",
+      "local": "Local",
+      "selectSource": "Local ou Vault",
+      "pathPlaceholder": "chemin du secret/clé",
+      "pathHelperText": "Chemin du secret, terminé par la clé contenant la valeur, p. ex. « app/creds/username »."
     }
   }
 }

@@ -18,17 +18,25 @@
  */
 package net.netshot.netshot.device.credentials;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.database.StringEncryptorConverter;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.vault.VaultInstance;
+import net.netshot.netshot.vault.VaultableSecret;
 
 /**
  * SSH credentials with a private key.
@@ -42,11 +50,30 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
+		@JsonSerialize(using = HideSecretSerializer.class),
+		@JsonDeserialize(using = HideSecretDeserializer.class),
 		@Column(length = 5000),
 		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String privateKey;
+
+	/** See {@code DeviceCliAccount.usernameVaultInstanceId} for why this isn't named "privateKeyVaultInstance". */
+	@Getter(onMethod = @__({
+		@ManyToOne,
+		@JsonIgnore
+	}))
+	@Setter
+	private VaultInstance privateKeyVaultInstanceId;
+
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(name = "private_key_vault_path")
+	}))
+	@Setter
+	private String privateKeyVaultPath;
+
+	private Long privateKeyPendingVaultInstanceId;
 
 	protected DeviceSshKeyAccount() {
 
@@ -56,6 +83,50 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 		String superPassword, String name) {
 		super(username, passphrase, superPassword, name);
 		this.privateKey = privateKey;
+	}
+
+	/**
+	 * JSON/XML-facing accessor - named differently in Java than the internal JPA getter (which returns the
+	 * entity, not the ID), but mapped to the same wire property name via {@code @JsonProperty}.
+	 * @return the Vault instance ID, or null if not Vault-backed
+	 */
+	@XmlElement(name = "privateKeyVaultInstanceId")
+	@JsonView(DefaultView.class)
+	@JsonProperty("privateKeyVaultInstanceId")
+	@Transient
+	public Long getResolvedPrivateKeyVaultInstanceId() {
+		if (this.privateKeyPendingVaultInstanceId != null) {
+			return this.privateKeyPendingVaultInstanceId;
+		}
+		return this.privateKeyVaultInstanceId == null ? null : this.privateKeyVaultInstanceId.getId();
+	}
+
+	@JsonProperty("privateKeyVaultInstanceId")
+	public void setResolvedPrivateKeyVaultInstanceId(Long vaultInstanceId) {
+		this.privateKeyPendingVaultInstanceId = vaultInstanceId;
+	}
+
+	/**
+	 * Bundles the private key's local/Vault state for {@link net.netshot.netshot.vault.VaultManager} and the REST layer. Not JPA-mapped, not Jackson-visible.
+	 * @return the bundled private key secret
+	 */
+	@Transient
+	public VaultableSecret getPrivateKeySecret() {
+		VaultableSecret secret = new VaultableSecret();
+		secret.setLocalValue(this.privateKey);
+		secret.setVaultInstance(this.privateKeyVaultInstanceId);
+		if (this.privateKeyPendingVaultInstanceId != null) {
+			secret.setVaultInstanceId(this.privateKeyPendingVaultInstanceId);
+		}
+		secret.setVaultPath(this.privateKeyVaultPath);
+		return secret;
+	}
+
+	public void setPrivateKeySecret(VaultableSecret secret) {
+		this.privateKey = secret.getLocalValue();
+		this.privateKeyVaultInstanceId = secret.getVaultInstance();
+		this.privateKeyVaultPath = secret.getVaultPath();
+		this.privateKeyPendingVaultInstanceId = null;
 	}
 
 	@Override

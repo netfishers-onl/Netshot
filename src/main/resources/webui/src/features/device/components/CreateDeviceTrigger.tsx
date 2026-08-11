@@ -59,7 +59,7 @@ function DeviceCreateForm() {
           {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
             <>
               <Separator />
-              <DeviceAccessFields control={form.control} accessDefinitions={selectedDeviceType.accessDefinitions} />
+              <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
             </>
           )}
         </>

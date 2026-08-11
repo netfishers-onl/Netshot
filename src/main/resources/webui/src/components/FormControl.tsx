@@ -57,8 +57,8 @@ export type FormControlProps<T extends FieldValues> = {
   endAddon?: ReactNode
   endAddonProps?: InputAddonProps
   ref?: RefObject<HTMLInputElement | HTMLTextAreaElement | null>
-} & Omit<InputProps, "recipe"> &
-  Omit<SystemStyleObject, "recipe"> &
+} & Omit<InputProps, "recipe" | "prefix"> &
+  Omit<SystemStyleObject, "recipe" | "prefix"> &
   UseControllerProps<T>
 
 function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
@@ -272,7 +272,8 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
           </Combobox.Root>
         ) : (
           <InputGroup
-            startElement={prefix}
+            startAddon={prefix}
+            startAddonProps={{ p: "0" }}
             endElement={suffix}
             endAddon={endAddon}
             endAddonProps={endAddonProps}
@@ -380,6 +381,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
       {type === FormControlType.Password && (
         <InputGroup
           startAddon={prefix}
+          startAddonProps={{ p: "0" }}
           endElement={
             <>
               {allowUnchanged && !isUnchanged && (
@@ -411,6 +413,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
                   </IconButton>
                 </span>
               </Tooltip>
+              {suffix}
             </>
           }
         >
@@ -429,6 +432,8 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
       )}
       {type === FormControlType.LongText && (
         <InputGroup
+          startAddon={prefix}
+          startAddonProps={{ p: "0" }}
           endElementProps={{ alignItems: "flex-start", pt: "2" }}
           endElement={
             <>
@@ -470,6 +475,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
                   <LuX />
                 </IconButton>
               )}
+              {suffix}
             </>
           }
         >

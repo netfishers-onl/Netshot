@@ -5,5 +5,6 @@ export const QUERIES = {
   ADMIN_DRIVERS: "admin-drivers",
   ADMIN_API_TOKENS: "admin-api-tokens",
   ADMIN_WEBHOOKS: "admin-webhooks",
+  ADMIN_VAULT_INSTANCES: "admin-vault-instances",
   ADMIN_CLUSTERS: "admin-clusters",
 }

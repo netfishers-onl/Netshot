@@ -39,6 +39,11 @@ export default function AdministrationSidebar() {
           description={t("policy.rule.executeExternalFunction")}
         />
         <SidebarLink
+          to="./vault"
+          label={t("vault.list")}
+          description={t("vault.manage")}
+        />
+        <SidebarLink
           to="./clustering"
           label={t("admin.clustering.label")}
           description={t("admin.clustering.manage")}

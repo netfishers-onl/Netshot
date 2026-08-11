@@ -43,14 +43,22 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
     ) {
       Object.assign(values, {
         community: PASSWORD_UNCHANGED,
+        communityVaultInstanceId: credential.communityVaultInstanceId ?? null,
+        communityVaultPath: credential.communityVaultPath ?? "",
       })
     } else if (credential.type === CredentialSetType.SNMP_V3) {
       Object.assign(values, {
         username: credential.username,
+        usernameVaultInstanceId: credential.usernameVaultInstanceId ?? null,
+        usernameVaultPath: credential.usernameVaultPath ?? "",
         authType: credential.authType,
         authKey: PASSWORD_UNCHANGED,
+        authKeyVaultInstanceId: credential.authKeyVaultInstanceId ?? null,
+        authKeyVaultPath: credential.authKeyVaultPath ?? "",
         privType: credential.privType,
         privKey: PASSWORD_UNCHANGED,
+        privKeyVaultInstanceId: credential.privKeyVaultInstanceId ?? null,
+        privKeyVaultPath: credential.privKeyVaultPath ?? "",
       })
     } else if (
       credential.type === CredentialSetType.SSH ||
@@ -58,20 +66,38 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
     ) {
       Object.assign(values, {
         username: credential.username,
+        usernameVaultInstanceId: credential.usernameVaultInstanceId ?? null,
+        usernameVaultPath: credential.usernameVaultPath ?? "",
         password: PASSWORD_UNCHANGED,
+        passwordVaultInstanceId: credential.passwordVaultInstanceId ?? null,
+        passwordVaultPath: credential.passwordVaultPath ?? "",
         superPassword: PASSWORD_UNCHANGED,
+        superPasswordVaultInstanceId: credential.superPasswordVaultInstanceId ?? null,
+        superPasswordVaultPath: credential.superPasswordVaultPath ?? "",
       })
     } else if (credential.type === CredentialSetType.SSHKey) {
       Object.assign(values, {
         username: credential.username,
+        usernameVaultInstanceId: credential.usernameVaultInstanceId ?? null,
+        usernameVaultPath: credential.usernameVaultPath ?? "",
         privateKey: PASSWORD_UNCHANGED,
+        privateKeyVaultInstanceId: credential.privateKeyVaultInstanceId ?? null,
+        privateKeyVaultPath: credential.privateKeyVaultPath ?? "",
         password: PASSWORD_UNCHANGED,
+        passwordVaultInstanceId: credential.passwordVaultInstanceId ?? null,
+        passwordVaultPath: credential.passwordVaultPath ?? "",
         superPassword: PASSWORD_UNCHANGED,
+        superPasswordVaultInstanceId: credential.superPasswordVaultInstanceId ?? null,
+        superPasswordVaultPath: credential.superPasswordVaultPath ?? "",
       })
     } else if (credential.type === CredentialSetType.HTTP) {
       Object.assign(values, {
         username: credential.username,
+        usernameVaultInstanceId: credential.usernameVaultInstanceId ?? null,
+        usernameVaultPath: credential.usernameVaultPath ?? "",
         password: PASSWORD_UNCHANGED,
+        passwordVaultInstanceId: credential.passwordVaultInstanceId ?? null,
+        passwordVaultPath: credential.passwordVaultPath ?? "",
       })
     }
 
@@ -123,18 +149,27 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
           type === CredentialSetType.SNMP_V1 ||
           type === CredentialSetType.SNMP_V2C
         ) {
-          if (values.community !== PASSWORD_UNCHANGED) {
-            Object.assign(payload, {
-              community: values.community ?? undefined,
-            })
+          const communityPayload: Partial<DeviceCredentialPayload> = {
+            communityVaultInstanceId: values.communityVaultInstanceId,
+            communityVaultPath: values.communityVaultPath,
           }
+          if (values.community !== PASSWORD_UNCHANGED) {
+            communityPayload.community = values.community ?? undefined
+          }
+          Object.assign(payload, communityPayload)
         }
 
         if (type === CredentialSetType.SNMP_V3) {
           const snmpPayload: Partial<DeviceCredentialPayload> = {
             username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
             authType: values.authType,
+            authKeyVaultInstanceId: values.authKeyVaultInstanceId,
+            authKeyVaultPath: values.authKeyVaultPath,
             privType: values.privType,
+            privKeyVaultInstanceId: values.privKeyVaultInstanceId,
+            privKeyVaultPath: values.privKeyVaultPath,
           }
           if (values.authKey !== PASSWORD_UNCHANGED) snmpPayload.authKey = values.authKey ?? undefined
           if (values.privKey !== PASSWORD_UNCHANGED) snmpPayload.privKey = values.privKey ?? undefined
@@ -143,20 +178,42 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
           type === CredentialSetType.SSH ||
           type === CredentialSetType.Telnet
         ) {
-          const sshPayload: Partial<DeviceCredentialPayload> = { username: values.username }
+          const sshPayload: Partial<DeviceCredentialPayload> = {
+            username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
+            passwordVaultInstanceId: values.passwordVaultInstanceId,
+            passwordVaultPath: values.passwordVaultPath,
+            superPasswordVaultInstanceId: values.superPasswordVaultInstanceId,
+            superPasswordVaultPath: values.superPasswordVaultPath,
+          }
           if (values.password !== PASSWORD_UNCHANGED) sshPayload.password = values.password ?? undefined
           if (values.superPassword !== PASSWORD_UNCHANGED) sshPayload.superPassword = values.superPassword ?? undefined
           Object.assign(payload, sshPayload)
         } else if (type === CredentialSetType.SSHKey) {
           const sshKeyPayload: Partial<DeviceCredentialPayload> = {
             username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
+            privateKeyVaultInstanceId: values.privateKeyVaultInstanceId,
+            privateKeyVaultPath: values.privateKeyVaultPath,
+            passwordVaultInstanceId: values.passwordVaultInstanceId,
+            passwordVaultPath: values.passwordVaultPath,
+            superPasswordVaultInstanceId: values.superPasswordVaultInstanceId,
+            superPasswordVaultPath: values.superPasswordVaultPath,
           }
           if (values.privateKey !== PASSWORD_UNCHANGED && values.privateKey !== "") sshKeyPayload.privateKey = values.privateKey ?? undefined
           if (values.password !== PASSWORD_UNCHANGED) sshKeyPayload.password = values.password ?? undefined
           if (values.superPassword !== PASSWORD_UNCHANGED) sshKeyPayload.superPassword = values.superPassword ?? undefined
           Object.assign(payload, sshKeyPayload)
         } else if (type === CredentialSetType.HTTP) {
-          const httpPayload: Partial<DeviceCredentialPayload> = { username: values.username }
+          const httpPayload: Partial<DeviceCredentialPayload> = {
+            username: values.username,
+            usernameVaultInstanceId: values.usernameVaultInstanceId,
+            usernameVaultPath: values.usernameVaultPath,
+            passwordVaultInstanceId: values.passwordVaultInstanceId,
+            passwordVaultPath: values.passwordVaultPath,
+          }
           if (values.password !== PASSWORD_UNCHANGED) httpPayload.password = values.password ?? undefined
           Object.assign(payload, httpPayload)
         }

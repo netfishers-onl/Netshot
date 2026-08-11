@@ -1,5 +1,7 @@
 export * from "./useDeviceCredentialSetAuthTypeOptions"
 export * from "./useDeviceCredentialSetPrivateKeyTypeOptions"
 export * from "./useDeviceCredentialSetTypeOptions"
+export * from "./useVaultAuthMethodOptions"
+export * from "./useVaultInstanceTypeOptions"
 export * from "./useWebhookDataTypeOptions"
 export * from "./useWebhookTriggerOptions"

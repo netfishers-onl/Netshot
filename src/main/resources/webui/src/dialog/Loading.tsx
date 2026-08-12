@@ -18,6 +18,7 @@ export default function LoadingDialog() {
       placement="center"
       motionPreset="slide-in-bottom"
       closeOnInteractOutside={false}
+      closeOnEscape={false}
       onOpenChange={(e) => {
         if (!e.open) {
           config.close()

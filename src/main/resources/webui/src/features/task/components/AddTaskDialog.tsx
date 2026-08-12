@@ -294,6 +294,7 @@ export default function AddTaskDialog({ initialType }: AddTaskDialogProps = {}) 
         open={dialogConfig.props.isOpen}
         scrollBehavior="inside"
         closeOnInteractOutside={false}
+        closeOnEscape={false}
         size={dialogConfig.props.size}
         onOpenChange={(e) => {
           if (!e.open) {

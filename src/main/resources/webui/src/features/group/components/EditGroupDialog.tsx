@@ -107,6 +107,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
         preventScroll={false}
         placement="center"
         open={dialogConfig.props.isOpen}
+        closeOnEscape={false}
         onOpenChange={(e) => {
           if (!e.open) {
             dialogConfig.close()

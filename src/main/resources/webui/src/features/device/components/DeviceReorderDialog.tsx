@@ -83,6 +83,7 @@ export default function DeviceReorderDialog(props: DeviceReorderDialogProps) {
       scrollBehavior="inside"
       size="sm"
       open={dialogConfig.props.isOpen}
+      closeOnEscape={false}
       onOpenChange={(e) => {
         if (!e.open) {
           dialogConfig.close()

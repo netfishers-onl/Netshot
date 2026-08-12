@@ -208,6 +208,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
       size="xl"
       variant={dialogConfig.props.variant}
       closeOnInteractOutside={false}
+      closeOnEscape={false}
       scrollBehavior="inside"
       onOpenChange={(e) => {
         if (!e.open) dialogConfig.close()

@@ -112,6 +112,7 @@ export default function AddGroupDialog() {
         preventScroll={false}
         placement="center"
         closeOnInteractOutside={false}
+        closeOnEscape={false}
         size={formStep === FormStep.Type ? "2xl" : "6xl"}
         open={dialogConfig.props.isOpen}
         onOpenChange={(e) => {

@@ -53,6 +53,7 @@ export default function AlertDialog() {
       size={config.props.size}
       variant={config.props.variant}
       closeOnInteractOutside={false}
+      closeOnEscape={false}
       scrollBehavior="inside"
       onOpenChange={(e) => {
         if (!e.open) {

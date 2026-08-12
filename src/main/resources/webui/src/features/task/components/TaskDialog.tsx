@@ -293,6 +293,7 @@ export default function TaskDialog(props: TaskDialogProps) {
       placement="center"
       motionPreset="slide-in-bottom"
       size="lg"
+      closeOnEscape={false}
       onOpenChange={(e) => {
         if (!e.open) {
           dialogConfig.close()

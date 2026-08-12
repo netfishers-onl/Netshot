@@ -71,6 +71,7 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
       scrollBehavior="inside"
       size="xl"
       open={dialogConfig.props.isOpen}
+      closeOnEscape={false}
       onOpenChange={(e) => {
         if (!e.open) {
           dialogConfig.close()

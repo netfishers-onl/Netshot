@@ -166,6 +166,7 @@ export default function AddDiagnosticDialog() {
         size={dialogConfig.props.size}
         variant={dialogConfig.props.variant}
         closeOnInteractOutside={false}
+        closeOnEscape={false}
         scrollBehavior="inside"
         onOpenChange={(e) => {
           if (!e.open) {

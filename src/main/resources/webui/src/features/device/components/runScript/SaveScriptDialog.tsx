@@ -115,6 +115,7 @@ export default function SaveScriptDialog(props: SaveScriptDialogProps) {
         motionPreset="slide-in-bottom"
         size={dialogConfig.props.size}
         closeOnInteractOutside={false}
+        closeOnEscape={false}
         scrollBehavior="inside"
         onOpenChange={(e) => {
           if (!e.open) {

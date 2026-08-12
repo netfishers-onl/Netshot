@@ -66,6 +66,7 @@ export default function FormDialog<F extends FieldValues = FieldValues>() {
         scrollBehavior="inside"
         preventScroll={false}
         closeOnInteractOutside={false}
+        closeOnEscape={false}
         onOpenChange={(e) => {
           if (!e.open) {
             config.close()

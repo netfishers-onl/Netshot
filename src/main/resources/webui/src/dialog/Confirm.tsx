@@ -65,6 +65,7 @@ export default function ConfirmDialog() {
       motionPreset="slide-in-bottom"
       size={config.props.size}
       closeOnInteractOutside={false}
+      closeOnEscape={false}
       onOpenChange={(e) => {
         if (!e.open) {
           config.close()

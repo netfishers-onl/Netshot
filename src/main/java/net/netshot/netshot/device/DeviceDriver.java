@@ -75,6 +75,7 @@ import net.netshot.netshot.device.access.Ssh.SshInteractionInstruction;
 import net.netshot.netshot.device.access.Telnet.TelnetConfig;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.attribute.OptionDefinition;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 import net.netshot.netshot.device.credentials.DeviceSnmpv1Community;
@@ -484,6 +485,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** The device attributes as map for faster lookup. */
 	private Map<AttributeDefinition.AttributeLevel, Map<String, AttributeDefinition>> attributesByName;
 
+	/** The per-device, user-configurable options declared by this driver. */
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	private Map<String, OptionDefinition> options = new HashMap<>();
+
 	/** The protocols provided by this driver. */
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
@@ -864,6 +871,28 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 			catch (IllegalArgumentException e) {
 				throw new IllegalArgumentException("Invalid Device object.", e);
+			}
+
+			try {
+				Value optionsBlock = context.getBindings("js").getMember("Options");
+				if (optionsBlock != null && optionsBlock.hasMembers()) {
+					for (String key : optionsBlock.getMemberKeys()) {
+						if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
+							throw new IllegalArgumentException(String.format("Invalid option item %s.", key));
+						}
+						try {
+							Value data = optionsBlock.getMember(key);
+							OptionDefinition item = new OptionDefinition(this, key, data);
+							this.options.put(item.getName(), item);
+						}
+						catch (IllegalArgumentException e) {
+							throw new IllegalArgumentException(String.format("Invalid item %s in Options.", key), e);
+						}
+					}
+				}
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid Options object.", e);
 			}
 
 			try {

@@ -60,6 +60,7 @@ import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
+import net.netshot.netshot.device.attribute.OptionDefinition;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
 import net.netshot.netshot.work.TaskContext;
 
@@ -482,6 +483,54 @@ public final class JsDeviceHelper {
 	public Object get(String item) {
 		log.debug("JavaScript request for item {} on current device.", item);
 		return this.getDeviceItem(this.device, item);
+	}
+
+	/**
+	 * Resolves the per-device values of the driver-declared Options, falling
+	 * back to each option's default value when the device has no stored
+	 * value for it. Read-only: options are user-set, not driver-written.
+	 *
+	 * <p>Values are already correctly typed in {@link Device#getOptions()}
+	 * (a real {@code Boolean} for a BOOLEAN option, a {@code String} for
+	 * TEXT/LIST) and passed through as-is.</p>
+	 *
+	 * @return the effective option values, keyed by option name
+	 */
+	public Map<String, Object> resolveOptionValues() {
+		Map<String, Object> values = new HashMap<>();
+		DeviceDriver driver;
+		try {
+			driver = this.device.getDeviceDriver();
+		}
+		catch (MissingDeviceDriverException e) {
+			driver = null;
+		}
+		if (driver != null) {
+			Map<String, Object> storedOptions = this.device.getOptions();
+			for (OptionDefinition definition : driver.getOptions().values()) {
+				Object value = storedOptions.get(definition.getName());
+				if (value == null) {
+					value = definition.getDefaultValue();
+				}
+				if (value != null) {
+					values.put(definition.getName(), value);
+				}
+			}
+		}
+		return values;
+	}
+
+	/**
+	 * Gets the per-device values of the driver-declared Options, for use
+	 * from JS as {@code device.options.<name>} - a driver's natural
+	 * {@code if (device.options.x)} check works as expected since values
+	 * are properly typed (see {@link #resolveOptionValues()}).
+	 *
+	 * @return a JS object mapping option name to its current value
+	 */
+	@Export
+	public Object getOptions() {
+		return ProxyObject.fromMap(this.resolveOptionValues());
 	}
 
 	/**

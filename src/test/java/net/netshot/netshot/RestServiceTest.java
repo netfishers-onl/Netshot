@@ -1661,6 +1661,7 @@ public class RestServiceTest extends WithDatabaseTest {
 				accessDefNode.put("group", accessDef.getGroup());
 				accessDefNode.put("priority", Long.valueOf(accessDef.getPriority()));
 			}
+			targetData.putObject("options");
 			Assertions.assertEquals(targetData, testDriverNode,
 				"Retrieved device type doesn't match expected object");
 		}
@@ -1771,6 +1772,7 @@ public class RestServiceTest extends WithDatabaseTest {
 				expectedNode1.putArray("ownerGroups");
 				expectedNode1.putArray("attributes");
 				expectedNode1.putArray("accesses");
+				expectedNode1.putObject("options");
 				expectedNode1.set("mgmtDomain",
 					JsonNodeFactory.instance.objectNode()
 						.put("id", device1.getMgmtDomain().getId())

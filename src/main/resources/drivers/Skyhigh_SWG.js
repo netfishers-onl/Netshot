@@ -30,7 +30,7 @@ var Info = {
 	name: "SkyhighSWG",
 	description: "Skyhigh Secure Web Gateway",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "2.0"
 };
 
 var Config = {
@@ -48,6 +48,14 @@ var Config = {
 };
 
 var Device = {
+};
+
+var Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive",
+		default: true,
+	},
 };
 
 var CLI = {
@@ -146,50 +154,52 @@ function snapshot(cli, device, config) {
 	}
 
 	
-	const backupBaseFile = "/var/tmp/netshot";
+	if (device.options.fullBackup) {
+		const backupBaseFile = "/var/tmp/netshot";
 
-	try {
-		// Generate backup archive file and download
-		// Clean up just in case
-		cli.command(`rm -f ${backupBaseFile}*`);
+		try {
+			// Generate backup archive file and download
+			// Clean up just in case
+			cli.command(`rm -f ${backupBaseFile}*`);
 
-		// Initiate backup
-		const backupCommand = `/opt/mwg/bin/mwg-coordinator -B 'file:in=ACTIVE,out=${backupBaseFile};options:recreate=yes'`;
-		const backupOutput = cli.command(backupCommand, {
-			timeout: 10 * 1000 * 60, // 10 minutes
-		});
+			// Initiate backup
+			const backupCommand = `/opt/mwg/bin/mwg-coordinator -B 'file:in=ACTIVE,out=${backupBaseFile};options:recreate=yes'`;
+			const backupOutput = cli.command(backupCommand, {
+				timeout: 10 * 1000 * 60, // 10 minutes
+			});
 
-		/** Example
-		 * [root@mcafix ~]# /opt/mwg/bin/mwg-coordinator -B 'file:in=ACTIVE,out=/var/tmp/netshot;options:recreate=yes'
-		 * successfully sent backup request "file:in=ACTIVE,out=/var/tmp/netshot;options:recreate=yes" to running Coordinator process.
-		 * Job queued with id: 10
-		 * Job progress: .
-		 * Job finished.
-		 * Coordinator responded:
-		 * OK - file copied to '/var/tmp/netshot.backup'.
-		 */
+			/** Example
+			 * [root@mcafix ~]# /opt/mwg/bin/mwg-coordinator -B 'file:in=ACTIVE,out=/var/tmp/netshot;options:recreate=yes'
+			 * successfully sent backup request "file:in=ACTIVE,out=/var/tmp/netshot;options:recreate=yes" to running Coordinator process.
+			 * Job queued with id: 10
+			 * Job progress: .
+			 * Job finished.
+			 * Coordinator responded:
+			 * OK - file copied to '/var/tmp/netshot.backup'.
+			 */
 
-		const outputMatch = backupOutput.match(/^OK - file copied to '(.+)'/m);
-		if (!outputMatch) {
-			throw `Error while generating backup file: ${backupOutput}`;
+			const outputMatch = backupOutput.match(/^OK - file copied to '(.+)'/m);
+			if (!outputMatch) {
+				throw `Error while generating backup file: ${backupOutput}`;
+			}
+			const backupFile = outputMatch[1];
+			if (!backupFile.startsWith(backupBaseFile)) {
+				throw `Unexpected backup file '${backupFile}': doesn't contain '${backupBaseFile}'`;
+			}
+			cli.command(`gzip ${backupFile}`);
+			const backupGzFile = `${backupFile}.gz`;
+			const checksum = cli.command(`sha256sum ${backupGzFile}`);
+			const hashMatch = checksum.match(/^([0-9a-f]{64})\s+(.+)/m);
+			if (!hashMatch || hashMatch[2] !== backupGzFile) {
+				throw `Unable to compute hash of backup file:\n${checksum}`;
+			}
+			const backupHash = hashMatch[1];
+			config.download("backupArchive", backupGzFile, { method: "scp", checksum: backupHash });
 		}
-		const backupFile = outputMatch[1];
-		if (!backupFile.startsWith(backupBaseFile)) {
-			throw `Unexpected backup file '${backupFile}': doesn't contain '${backupBaseFile}'`;
+		finally {
+			// Final cleanup
+			cli.command(`rm -f ${backupBaseFile}*`);
 		}
-		cli.command(`gzip ${backupFile}`);
-		const backupGzFile = `${backupFile}.gz`;
-		const checksum = cli.command(`sha256sum ${backupGzFile}`);
-		const hashMatch = checksum.match(/^([0-9a-f]{64})\s+(.+)/m);
-		if (!hashMatch || hashMatch[2] !== backupGzFile) {
-			throw `Unable to compute hash of backup file:\n${checksum}`;
-		}
-		const backupHash = hashMatch[1];
-		config.download("backupArchive", backupGzFile, { method: "scp", checksum: backupHash });
-	}
-	finally {
-		// Final cleanup
-		cli.command(`rm -f ${backupBaseFile}*`);
 	}
 };
 

@@ -32,10 +32,12 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -159,6 +161,22 @@ public class Device {
 	}))
 	@Setter
 	private Set<DeviceAttribute> attributes = new HashSet<>();
+
+	/**
+	 * User-configured, per-device values for the options declared by the
+	 * device's driver (e.g. "force full backup"). Unlike {@link #attributes},
+	 * which the driver populates during a snapshot, these are set by the
+	 * user and only read by the driver at runtime. Values are typed to match
+	 * their option's declared type (a real {@code Boolean} for a BOOLEAN
+	 * option, a {@code String} for TEXT/LIST), stored as-is in the JSON
+	 * column rather than as stringified text.
+	 */
+	@Getter(onMethod = @__({
+		@JdbcTypeCode(SqlTypes.JSON),
+		@XmlElement, @JsonView(RestApiView.class)
+	}))
+	@Setter
+	private Map<String, Object> options = new HashMap<>();
 
 	/** The change date. */
 	@Getter(onMethod = @__({

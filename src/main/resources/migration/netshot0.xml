@@ -2116,4 +2116,16 @@
 			constraintName="FK_dcs_priv_key_vault" onDelete="RESTRICT" onUpdate="NO ACTION"
 			referencedColumnNames="id" referencedTableName="vault_instance" validate="true"/>
 	</changeSet>
+	<changeSet author="netshot" id="0.25.0_41">
+		<!-- Per-device values for driver-declared, user-configurable Options
+			(e.g. "force full backup"), keyed by option name. Same JSON-blob
+			approach as run_device_script_task.user_input_values, since these
+			are driver-defined, not part of any cross-device query/filter. -->
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="device" columnName="options"/></not>
+		</preConditions>
+		<addColumn tableName="device">
+			<column name="options" type="${JSON}"/>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

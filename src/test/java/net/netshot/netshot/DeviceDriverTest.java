@@ -37,6 +37,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.graalvm.polyglot.proxy.ProxyObject;
 import org.hibernate.Session;
 
 import net.netshot.netshot.device.Config;
@@ -48,6 +49,7 @@ import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.DeviceDriver.Location;
 import net.netshot.netshot.device.DeviceDriver.LocationType;
 import net.netshot.netshot.device.Domain;
+import net.netshot.netshot.device.DriverValueType;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.AccessManager;
@@ -60,6 +62,8 @@ import net.netshot.netshot.device.attribute.ConfigTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
+import net.netshot.netshot.device.attribute.OptionDefinition;
+import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
@@ -1866,6 +1870,237 @@ public class DeviceDriverTest {
 			Assertions.assertThrows(IllegalArgumentException.class, () -> new DeviceDriver(
 				new StringReader(BAD_CASE_AUTH_TYPE_DRIVER_JS), "BadCaseAuthTypeDriver.js",
 				new Location(LocationType.EMBEDDED, "BadCaseAuthTypeDriver.js")));
+		}
+
+	}
+
+	/**
+	 * Tests for the {@code Options} descriptor block: per-device,
+	 * user-configurable settings a driver declares (as opposed to the
+	 * driver-collected {@code Config}/{@code Device} attributes).
+	 */
+	@Nested
+	@DisplayName("Options block test")
+	class OptionsBlockTest {
+
+		private static final String OPTIONS_DRIVER_JS = """
+			var Info = {
+				name: "OptionsTestDriver",
+				author: "test",
+				description: "test",
+				version: "1.0"
+			};
+
+			var Config = {};
+			var Device = {};
+			var CLI = { ssh: {} };
+
+			var Options = {
+				fullBackup: {
+					type: "Boolean",
+					title: "Force full backup",
+					default: true,
+				},
+				backupMode: {
+					type: "List",
+					title: "Backup mode",
+					choices: ["running-config", "startup-config", "both"],
+					default: "running-config",
+				},
+				comment: {
+					type: "Text",
+					title: "Comment",
+				},
+			};
+
+			function snapshot(client, device, config) {
+			}
+			""";
+
+		private static final String NO_OPTIONS_DRIVER_JS = """
+			var Info = {
+				name: "NoOptionsTestDriver",
+				author: "test",
+				description: "test",
+				version: "1.0"
+			};
+
+			var Config = {};
+			var Device = {};
+			var CLI = { ssh: {} };
+
+			function snapshot(client, device, config) {
+			}
+			""";
+
+		private static String badOptionsDriverJs(String optionsBlock) {
+			return """
+				var Info = {
+					name: "BadOptionsTestDriver",
+					author: "test",
+					description: "test",
+					version: "1.0"
+				};
+
+				var Config = {};
+				var Device = {};
+				var CLI = { ssh: {} };
+
+				var Options = %s;
+
+				function snapshot(client, device, config) {
+				}
+				""".formatted(optionsBlock);
+		}
+
+		private DeviceDriver buildDriver(String js, String name) throws Exception {
+			return new DeviceDriver(new StringReader(js), name,
+				new Location(LocationType.EMBEDDED, name));
+		}
+
+		@Test
+		@DisplayName("Text, List and Boolean options are parsed with their title/choices/default")
+		void parsesAllOptionTypes() throws Exception {
+			DeviceDriver driver = this.buildDriver(OPTIONS_DRIVER_JS, "OptionsTestDriver.js");
+
+			OptionDefinition fullBackup = driver.getOptions().get("fullBackup");
+			Assertions.assertNotNull(fullBackup, "The 'fullBackup' option should exist");
+			Assertions.assertEquals(DriverValueType.BOOLEAN, fullBackup.getType());
+			Assertions.assertEquals("Force full backup", fullBackup.getTitle());
+			Assertions.assertEquals(Boolean.TRUE, fullBackup.getDefaultValue(),
+				"Boolean option default should be a real boolean, not a string");
+
+			OptionDefinition backupMode = driver.getOptions().get("backupMode");
+			Assertions.assertNotNull(backupMode, "The 'backupMode' option should exist");
+			Assertions.assertEquals(DriverValueType.LIST, backupMode.getType());
+			Assertions.assertEquals(
+				List.of("running-config", "startup-config", "both"), backupMode.getChoices());
+			Assertions.assertEquals("running-config", backupMode.getDefaultValue());
+
+			OptionDefinition comment = driver.getOptions().get("comment");
+			Assertions.assertNotNull(comment, "The 'comment' option should exist");
+			Assertions.assertEquals(DriverValueType.TEXT, comment.getType());
+			Assertions.assertNull(comment.getDefaultValue(), "No default was declared for 'comment'");
+		}
+
+		@Test
+		@DisplayName("A driver with no Options block simply has no declared options")
+		void missingOptionsBlockYieldsNoOptions() throws Exception {
+			DeviceDriver driver = this.buildDriver(NO_OPTIONS_DRIVER_JS, "NoOptionsTestDriver.js");
+			Assertions.assertTrue(driver.getOptions().isEmpty());
+		}
+
+		@Test
+		@DisplayName("A List option without 'choices' is rejected")
+		void listOptionWithoutChoicesIsRejected() {
+			String js = badOptionsDriverJs(
+				"{ mode: { type: \"List\", title: \"Mode\" } }");
+			Assertions.assertThrows(IllegalArgumentException.class,
+				() -> this.buildDriver(js, "BadOptionsTestDriver.js"));
+		}
+
+		@Test
+		@DisplayName("A List option whose default is not one of its choices is rejected")
+		void listOptionWithInvalidDefaultIsRejected() {
+			String js = badOptionsDriverJs(
+				"{ mode: { type: \"List\", title: \"Mode\", choices: [\"a\", \"b\"], default: \"c\" } }");
+			Assertions.assertThrows(IllegalArgumentException.class,
+				() -> this.buildDriver(js, "BadOptionsTestDriver.js"));
+		}
+
+		@Test
+		@DisplayName("An option with an unknown type is rejected")
+		void unknownOptionTypeIsRejected() {
+			String js = badOptionsDriverJs(
+				"{ mode: { type: \"Enum\", title: \"Mode\" } }");
+			Assertions.assertThrows(IllegalArgumentException.class,
+				() -> this.buildDriver(js, "BadOptionsTestDriver.js"));
+		}
+
+		@Test
+		@DisplayName("An option with an invalid title is rejected")
+		void invalidOptionTitleIsRejected() {
+			String js = badOptionsDriverJs(
+				"{ mode: { type: \"Text\", title: \"!\" } }");
+			Assertions.assertThrows(IllegalArgumentException.class,
+				() -> this.buildDriver(js, "BadOptionsTestDriver.js"));
+		}
+
+		/**
+		 * Registers a driver directly into {@link DeviceDriver}'s private static
+		 * registry (there's no public API for this - drivers are normally only
+		 * discovered from disk by {@link DeviceDriver#refreshDrivers()}), so that
+		 * {@link Device#getDeviceDriver()} can resolve it by name like any other
+		 * driver. Callers must remove it again with {@link #unregisterDriver}.
+		 */
+		@SuppressWarnings("unchecked")
+		private void registerDriver(DeviceDriver driver) throws Exception {
+			java.lang.reflect.Field field = DeviceDriver.class.getDeclaredField("drivers");
+			field.setAccessible(true);
+			((Map<String, DeviceDriver>) field.get(null)).put(driver.getName(), driver);
+		}
+
+		@SuppressWarnings("unchecked")
+		private void unregisterDriver(String name) throws Exception {
+			java.lang.reflect.Field field = DeviceDriver.class.getDeclaredField("drivers");
+			field.setAccessible(true);
+			((Map<String, DeviceDriver>) field.get(null)).remove(name);
+		}
+
+		@Test
+		@DisplayName("A Boolean option is exposed at runtime as a real JS boolean, not the string \"true\"/\"false\"")
+		void booleanOptionIsExposedAsRealBoolean() throws Exception {
+			// A non-empty string is truthy in JS, so if this leaked a stringified
+			// "false", a driver's natural `if (device.options.x)` check would
+			// always be true - this locks in that Device#getOptions() (and the
+			// JSON column behind it) stores real typed values, not strings.
+			DeviceDriver driver = this.buildDriver(OPTIONS_DRIVER_JS, "OptionsTestDriver.js");
+			this.registerDriver(driver);
+			try {
+				Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+				Device device = new Device("OptionsTestDriver", null, domain, "test");
+
+				JsDeviceHelper helper = new JsDeviceHelper(device, null, null, new FakeTaskContext(), false);
+				ProxyObject options = (ProxyObject) helper.getOptions();
+				Assertions.assertEquals(Boolean.TRUE, options.getMember("fullBackup"),
+					"Default Boolean option value should be a real boolean, not a string");
+				Assertions.assertEquals("running-config", options.getMember("backupMode"),
+					"List option value should remain a plain string");
+
+				device.setOptions(Map.of("fullBackup", Boolean.FALSE));
+				ProxyObject updatedOptions = (ProxyObject) helper.getOptions();
+				Assertions.assertEquals(Boolean.FALSE, updatedOptions.getMember("fullBackup"),
+					"An explicitly stored false value should be exposed as boolean false");
+			}
+			finally {
+				this.unregisterDriver("OptionsTestDriver");
+			}
+		}
+
+		@Test
+		@DisplayName("A snapshot in full-debug mode dumps the resolved option values to the debug log")
+		void snapshotDumpsOptionValuesInDebugLog() throws Exception {
+			DeviceDriver driver = this.buildDriver(OPTIONS_DRIVER_JS, "OptionsTestDriver.js");
+			this.registerDriver(driver);
+			try {
+				Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+				Device device = new Device("OptionsTestDriver", null, domain, "test");
+				FakeTaskContext taskContext = new FakeTaskContext();
+				SnapshotDeviceScript script = new SnapshotDeviceScript(taskContext);
+				Session nullSession = null;
+				AccessManager accessManager = new AccessManager(nullSession, device, null, taskContext, null);
+				Method runMethod = SnapshotDeviceScript.class.getDeclaredMethod("run", Session.class,
+					Device.class, AccessManager.class);
+				runMethod.setAccessible(true);
+				runMethod.invoke(script, nullSession, device, accessManager);
+
+				String log = taskContext.getLog();
+				Assertions.assertTrue(log.contains("options") && log.contains("fullBackup=true"),
+					"Debug log should contain the resolved option values (with defaults applied): " + log);
+			}
+			finally {
+				this.unregisterDriver("OptionsTestDriver");
+			}
 		}
 
 	}

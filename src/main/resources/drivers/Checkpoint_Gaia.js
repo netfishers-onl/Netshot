@@ -28,7 +28,7 @@ const Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "Netshot Team",
-	version: "3.1"
+	version: "4.0"
 };
 
 const Config = {
@@ -89,6 +89,14 @@ const Device = {
 		title: "OS Edition",
 		searchable: true
 	}
+};
+
+const Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive",
+		default: true,
+	},
 };
 
 const CLI = {
@@ -308,68 +316,70 @@ function snapshot(cli, device, config) {
 		}
 	}
 
-	const addBackup = cli.command("add backup local");
-	if (!addBackup.match(/Creating backup package/)) {
-		throw `Can't start backup: ${addBackup}`;
-	}
-
-	let maxLoops = 12 * 20;
-	while (true) {
-		cli.sleep(5000);
-		backupStatus = cli.command("show backup status");
-		if (backupStatus.match(/backup succeeded/)) {
-			break;
+	if (device.options.fullBackup) {
+		const addBackup = cli.command("add backup local");
+		if (!addBackup.match(/Creating backup package/)) {
+			throw `Can't start backup: ${addBackup}`;
 		}
-		else if (backupStatus.match(/Performing local backup/)) {
-			maxLoops -= 1;
-			if (maxLoops <= 0) {
-				throw "The local backup took too long";
+
+		let maxLoops = 12 * 20;
+		while (true) {
+			cli.sleep(5000);
+			backupStatus = cli.command("show backup status");
+			if (backupStatus.match(/backup succeeded/)) {
+				break;
+			}
+			else if (backupStatus.match(/Performing local backup/)) {
+				maxLoops -= 1;
+				if (maxLoops <= 0) {
+					throw "The local backup took too long";
+				}
+			}
+			else {
+				throw "Invalid Checkpoint backup status";
+			}
+		}
+
+		const backupNameMatch = backupStatus.match(/Backup file location: (.+)/);
+		if (backupNameMatch) {
+			const backupName = backupNameMatch[1];
+			let checksum = undefined;
+			if (cli._modeHistory.includes("expert")) {
+				try {
+					// Try to compute backup file's checkum in expert mode
+					cli.macro("expertBack");
+					const sha256sum = cli.command(`sha256sum ${backupName}`);
+					const hashMatch = sha256sum.match(/^([0-9a-f]{64})\s+.*\.tgz/m);
+					if (!hashMatch) {
+						throw "No match";
+					}
+					checksum = hashMatch[1];
+				}
+				catch (err) {
+					cli.debug(`Unable to compute hash of backup file on the device: ${err}`);
+				}
+				finally {
+					cli.macro("clish");
+				}
+			}
+			try {
+				config.download("backupArchive", backupName, { method: "scp", checksum });
+			}
+			catch (e) {
+				const text = "" + e;
+				if (text.match(/SCP error/)) {
+					throw "SCP error: is /bin/bash the user's login shell?";
+				}
+				throw e;
+			}
+			finally {
+				const toDelete = backupName.replace(/^.*\//, "");
+				cli.command(`delete backup ${toDelete}`);
 			}
 		}
 		else {
-			throw "Invalid Checkpoint backup status";
+			throw "Unable to find backup file path";
 		}
-	}
-
-	const backupNameMatch = backupStatus.match(/Backup file location: (.+)/);
-	if (backupNameMatch) {
-		const backupName = backupNameMatch[1];
-		let checksum = undefined;
-		if (cli._modeHistory.includes("expert")) {
-			try {
-				// Try to compute backup file's checkum in expert mode
-				cli.macro("expertBack");
-				const sha256sum = cli.command(`sha256sum ${backupName}`);
-				const hashMatch = sha256sum.match(/^([0-9a-f]{64})\s+.*\.tgz/m);
-				if (!hashMatch) {
-					throw "No match";
-				}
-				checksum = hashMatch[1];
-			}
-			catch (err) {
-				cli.debug(`Unable to compute hash of backup file on the device: ${err}`);
-			}
-			finally {
-				cli.macro("clish");
-			}
-		}
-		try {
-			config.download("backupArchive", backupName, { method: "scp", checksum });
-		}
-		catch (e) {
-			const text = "" + e;
-			if (text.match(/SCP error/)) {
-				throw "SCP error: is /bin/bash the user's login shell?";
-			}
-			throw e;
-		}
-		finally {
-			const toDelete = backupName.replace(/^.*\//, "");
-			cli.command(`delete backup ${toDelete}`);
-		}
-	}
-	else {
-		throw "Unable to find backup file path";
 	}
 };
 

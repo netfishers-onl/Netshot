@@ -136,6 +136,7 @@ export type Device = {
   softwareVersion: string
   status: DeviceStatus
   accesses: DeviceAccess[]
+  options: Record<string, string | boolean>
   realDeviceType: string
   endOfLife: boolean
   endOfSale: boolean
@@ -240,6 +241,20 @@ export type DeviceAccessDefinition = {
   priority: number
 }
 
+export enum DriverOptionType {
+  Text = "TEXT",
+  List = "LIST",
+  Boolean = "BOOLEAN",
+}
+
+export type DeviceOptionDefinition = {
+  name: string
+  title: string
+  type: DriverOptionType
+  choices?: string[]
+  defaultValue?: string | boolean
+}
+
 export type DeviceType = {
   attributes: DeviceAttributeDefinition[]
   author: string
@@ -254,6 +269,7 @@ export type DeviceType = {
   protocols: DeviceTypeProtocol[]
   sourceHash: string
   accessDefinitions: Record<string, DeviceAccessDefinition>
+  options: Record<string, DeviceOptionDefinition>
   version: string
 }
 

@@ -21,7 +21,7 @@ const Info = {
 	name: "CitrixNetscalerSDX",
 	description: "Citrix NetScaler SDX",
 	author: "Netshot Team",
-	version: "1.1"
+	version: "2.0"
 };
 
 const Config = {
@@ -60,6 +60,14 @@ var Device = {
 		type: "Numeric",
 		title: "Total CPU count",
 		searchable: true
+	},
+};
+
+var Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive",
+		default: true,
 	},
 };
 
@@ -201,49 +209,51 @@ function snapshot(cli, device, config) {
 		device.add("networkInterface", networkInterface);
 	}
 
-	const getBackupFiles = function() {
-		const listing = cli.command("ls -w1 /var/mps/backup/Backup_*.tgz");
-		const filePattern = /^(\/var\/.*\.tgz)/mg;
-		const backupFiles = [];
-		while (true) {
-			const fileMatch = filePattern.exec(listing);
-			if (!fileMatch) break;
-			backupFiles.push(fileMatch[0]);
+	if (device.options.fullBackup) {
+		const getBackupFiles = function() {
+			const listing = cli.command("ls -w1 /var/mps/backup/Backup_*.tgz");
+			const filePattern = /^(\/var\/.*\.tgz)/mg;
+			const backupFiles = [];
+			while (true) {
+				const fileMatch = filePattern.exec(listing);
+				if (!fileMatch) break;
+				backupFiles.push(fileMatch[0]);
+			}
+			return backupFiles;
 		}
-		return backupFiles;
-	}
 
-	// Capture existing backups
-	const beforeBackupFiles = getBackupFiles();
-	cli.macro("cli");
-	// Start backup
-	cli.command("add backup backup_file_name=NetshotBackup", { timeout: 30 * 60 * 1000 });
+		// Capture existing backups
+		const beforeBackupFiles = getBackupFiles();
+		cli.macro("cli");
+		// Start backup
+		cli.command("add backup backup_file_name=NetshotBackup", { timeout: 30 * 60 * 1000 });
 
-	cli.macro("shell");
-	const afterBackupFiles = getBackupFiles();
-	const backupFile = afterBackupFiles.filter(f => !beforeBackupFiles.includes(f)).at(0);
-	if (!backupFile) {
-		throw "No backup archive was produced after add backup";
-	}
-
-	try {
-		const backupSum = cli.command(`shasum -a 256 ${backupFile}`);
-		const backupMatch = backupSum.match(/^([0-9a-f]{64})\s+(\/var\/.*\.tgz)$/m);
-		if (!backupMatch) {
-			throw `Couldn't compute SHA256 of backup file ${backupFile}`;
+		cli.macro("shell");
+		const afterBackupFiles = getBackupFiles();
+		const backupFile = afterBackupFiles.filter(f => !beforeBackupFiles.includes(f)).at(0);
+		if (!backupFile) {
+			throw "No backup archive was produced after add backup";
 		}
-		if (backupFile !== backupMatch[2]) {
-			throw `Unexpected backup file in sha256sum output: '${backupFile}' vs '${backupMatch[2]}'`;
+
+		try {
+			const backupSum = cli.command(`shasum -a 256 ${backupFile}`);
+			const backupMatch = backupSum.match(/^([0-9a-f]{64})\s+(\/var\/.*\.tgz)$/m);
+			if (!backupMatch) {
+				throw `Couldn't compute SHA256 of backup file ${backupFile}`;
+			}
+			if (backupFile !== backupMatch[2]) {
+				throw `Unexpected backup file in sha256sum output: '${backupFile}' vs '${backupMatch[2]}'`;
+			}
+			const checksum = backupMatch[1];
+			config.download("backupArchive", backupFile, { method: "sftp", checksum, newSession: true });
 		}
-		const checksum = backupMatch[1];
-		config.download("backupArchive", backupFile, { method: "sftp", checksum, newSession: true });
-	}
-	catch (e) {
-		var text = "" + e;
-		throw e;
-	}
-	finally {
-		cli.command(`rm -f ${backupFile}`);
+		catch (e) {
+			var text = "" + e;
+			throw e;
+		}
+		finally {
+			cli.command(`rm -f ${backupFile}`);
+		}
 	}
 };
 

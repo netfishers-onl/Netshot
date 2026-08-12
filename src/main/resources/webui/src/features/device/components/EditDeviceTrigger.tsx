@@ -3,11 +3,12 @@ import { NetshotError } from "@/api/httpClient"
 import { DomainSelect } from "@/features/administration/components"
 import DeviceTypeSelect from "./DeviceTypeSelect"
 import DeviceAccessFields, { buildAccessesPayload, DeviceAccessFormValue, TRY_ALL_CREDENTIALS_VALUE } from "./DeviceAccessFields"
+import DeviceOptionFields, { buildOptionsPayload, DeviceOptionFormValue } from "./DeviceOptionFields"
 import FormControl, { FormControlType, PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
-import { CredentialSetType, Device, HttpsCaTrustMode, SshHostKeyVerification } from "@/types"
+import { CredentialSetType, Device, DriverOptionType, HttpsCaTrustMode, SshHostKeyVerification } from "@/types"
 import validators from "@/utils/validators"
 import { Alert, Separator, Stack } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -27,6 +28,7 @@ type Form = {
   ipAddress: string
   mgmtDomain: string
   accesses: DeviceAccessFormValue[]
+  options: Record<string, DeviceOptionFormValue>
   comments: string
 }
 
@@ -41,28 +43,38 @@ function DeviceEditForm() {
   const isDriverMissing = !isPending && Boolean(deviceType) && !selectedDeviceType
 
   return (
-    <Stack gap="6">
-      <FormControl readOnly label={t("common.name")} placeholder={t("device.name")} control={form.control} name="name" />
-      {isDriverMissing ? (
-        <Alert.Root variant="warning">
-          <Alert.Indicator />
-          <Alert.Title>
-            {t("device.driverNotLoaded", { driver: deviceType })}
-          </Alert.Title>
-        </Alert.Root>
-      ) : (
-        <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
-      )}
-      <DomainSelect control={form.control} name="mgmtDomain" />
-      <FormControl required label={t("device.mgmtAddress")} placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })} control={form.control} name="ipAddress" rules={validators.hostOrIp()} />
-      {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
-        <>
-          <Separator />
-          <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
-          <Separator />
-        </>
-      )}
-      <FormControl type={FormControlType.LongText} autosize rows={2} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
+    <Stack direction="row" overflow="auto" flex="1">
+      <Stack w="340px" flexShrink={0} overflow="auto" gap="6" p="3">
+        <FormControl readOnly label={t("common.name")} placeholder={t("device.name")} control={form.control} name="name" />
+        <DomainSelect control={form.control} name="mgmtDomain" />
+        <FormControl required label={t("device.mgmtAddress")} placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })} control={form.control} name="ipAddress" rules={validators.hostOrIp()} />
+        <FormControl type={FormControlType.LongText} autosize rows={2} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
+      </Stack>
+      <Separator orientation="vertical" />
+      <Stack flex="1" overflow="auto" gap="6" p="3">
+        {isDriverMissing ? (
+          <Alert.Root variant="warning">
+            <Alert.Indicator />
+            <Alert.Title>
+              {t("device.driverNotLoaded", { driver: deviceType })}
+            </Alert.Title>
+          </Alert.Root>
+        ) : (
+          <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
+        )}
+        {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
+          <>
+            <Separator />
+            <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
+          </>
+        )}
+        {selectedDeviceType && Object.keys(selectedDeviceType.options ?? {}).length > 0 && (
+          <>
+            <Separator />
+            <DeviceOptionFields control={form.control} setValue={form.setValue} optionDefinitions={selectedDeviceType.options} />
+          </>
+        )}
+      </Stack>
     </Stack>
   )
 }
@@ -129,12 +141,25 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
       }
     }) as DeviceAccessFormValue[]
 
+    // Same idea as accesses above: enumerate every option the driver declares,
+    // falling back to the option's declared default when the device has no
+    // stored value - both are already correctly typed (real booleans for
+    // BOOLEAN options, see `DriverValueField`/`Switch`), no string parsing needed.
+    const optionDefinitions = getOptionByDriver(device?.driver ?? null)?.value?.options ?? {}
+    const storedOptions = device?.options ?? {}
+    const options: Record<string, DeviceOptionFormValue> = {}
+    Object.values(optionDefinitions).forEach((def) => {
+      const stored = storedOptions[def.name] ?? def.defaultValue
+      options[def.name] = stored ?? (def.type === DriverOptionType.Boolean ? false : "")
+    })
+
     return {
       name: device?.name,
       deviceType: device?.driver,
       ipAddress: device?.mgmtAddress,
       mgmtDomain: device?.mgmtDomain?.id?.toString(),
       accesses,
+      options,
       comments: device?.comments ?? "",
     } as Form
   }, [device, getOptionByDriver])
@@ -154,7 +179,7 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
       title: t("device.edit"),
       description: <DeviceEditForm />,
       form,
-      size: "lg",
+      size: "4xl",
       async onSubmit(values: Form) {
         const updatedDevice: Partial<UpdateDevicePayload> = {
           comments: values?.comments,
@@ -163,6 +188,9 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
         }
 
         updatedDevice.accesses = buildAccessesPayload(values.accesses, credentialSets)
+
+        const optionDefinitions = getOptionByDriver(values?.deviceType ?? null)?.value?.options
+        updatedDevice.options = buildOptionsPayload(values.options, optionDefinitions)
 
         await mutation.mutateAsync(updatedDevice)
         dialogRef.close()

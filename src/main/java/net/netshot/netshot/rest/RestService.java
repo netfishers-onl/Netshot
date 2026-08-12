@@ -200,6 +200,7 @@ import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
+import net.netshot.netshot.device.attribute.OptionDefinition;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
@@ -1930,6 +1931,13 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private List<DeviceAccess> accesses;
+
+		/** Per-device values for the driver-declared Options, keyed by option name. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Map<String, Object> options;
 	}
 
 	/** Strict IPv4 dotted-quad pattern (each octet 0-255), to detect an IPv4 literal without ever risking a DNS lookup. */
@@ -2080,6 +2088,66 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException(
 					"The specific credential set is not compatible with access '" + access.getAccessName() + "'.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_TYPE);
+			}
+		}
+	}
+
+	/**
+	 * Validates posted per-device Options values against the driver's declared
+	 * {@link OptionDefinition}s: every key must be a known option, and the value
+	 * must be properly typed for it (a real boolean for BOOLEAN, one of
+	 * {@code choices} for LIST, any string for TEXT) - values are stored as-is,
+	 * as real JSON, not stringified (see {@link net.netshot.netshot.device.Device#getOptions()}).
+	 * @param driver the device's driver, or null if not known yet - a non-empty
+	 *        options map is rejected in that case
+	 * @param options the options to validate (may be null)
+	 * @throws NetshotBadRequestException if any entry is invalid
+	 */
+	private static void validateDeviceOptions(DeviceDriver driver, Map<String, Object> options)
+			throws NetshotBadRequestException {
+		if (options == null || options.isEmpty()) {
+			return;
+		}
+		if (driver == null) {
+			throw new NetshotBadRequestException(
+				"Cannot set options without a known device type.",
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+		}
+		for (Map.Entry<String, Object> entry : options.entrySet()) {
+			OptionDefinition definition = driver.getOptions().get(entry.getKey());
+			if (definition == null) {
+				throw new NetshotBadRequestException(
+					"Unknown option '%s' for this device type.".formatted(entry.getKey()),
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+			}
+			Object value = entry.getValue();
+			if (value == null) {
+				continue;
+			}
+			switch (definition.getType()) {
+				case BOOLEAN:
+					if (!(value instanceof Boolean)) {
+						throw new NetshotBadRequestException(
+							"Option '%s' should be a boolean.".formatted(entry.getKey()),
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+					}
+					break;
+				case LIST:
+					if (!(value instanceof String) || !definition.getChoices().contains(value)) {
+						throw new NetshotBadRequestException(
+							"Option '%s' is not one of the allowed choices.".formatted(entry.getKey()),
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+					}
+					break;
+				case TEXT:
+					if (!(value instanceof String)) {
+						throw new NetshotBadRequestException(
+							"Option '%s' should be a string.".formatted(entry.getKey()),
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+					}
+					break;
+				default:
+					break;
 			}
 		}
 	}
@@ -2453,10 +2521,14 @@ public class RestService extends Thread {
 			try {
 				session.beginTransaction();
 				RestService.validateDeviceAccesses(session, driver, device.getAccesses());
+				RestService.validateDeviceOptions(driver, device.getOptions());
 				newDevice = new Device(driver.getName(), deviceAddress, domain, user.getUsername());
 				if (device.getAccesses() != null) {
 					RestService.resolveDeviceAccessSpecificCredentials(session, newDevice, device.getAccesses());
 					newDevice.replaceAccesses(device.getAccesses());
+				}
+				if (device.getOptions() != null) {
+					newDevice.setOptions(device.getOptions());
 				}
 				session.persist(newDevice);
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername(), true, false, false);
@@ -2631,6 +2703,13 @@ public class RestService extends Thread {
 		@Setter
 		private List<DeviceAccess> accesses;
 
+		/** Per-device values for the driver-declared Options, keyed by option name. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Map<String, Object> options;
+
 		/**
 		 * Instantiates a new rs device.
 		 */
@@ -2690,6 +2769,17 @@ public class RestService extends Thread {
 				}
 				RestService.resolveDeviceAccessSpecificCredentials(session, device, rsDevice.getAccesses());
 				device.replaceAccesses(rsDevice.getAccesses());
+			}
+			if (rsDevice.getOptions() != null) {
+				try {
+					DeviceDriver driver = DeviceDriver.getDriverByName(device.getDriver());
+					RestService.validateDeviceOptions(driver, rsDevice.getOptions());
+				}
+				catch (NetshotBadRequestException e) {
+					Database.rollbackSilently(session);
+					throw e;
+				}
+				device.setOptions(rsDevice.getOptions());
 			}
 			if (rsDevice.getComments() != null) {
 				device.setComments(rsDevice.getComments());

@@ -30,7 +30,7 @@ var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
 	author: "Netshot Team",
-	version: "1.6"
+	version: "2.0"
 };
 
 var Config = {
@@ -70,6 +70,14 @@ var Config = {
 };
 
 var Device = {
+};
+
+var Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive",
+		default: true,
+	},
 };
 
 var CLI = {
@@ -253,22 +261,24 @@ function snapshot(cli, device, config) {
 		device.add("module", module);
 	}
 
-	cli.macro("backup", {
-		timeout: 30 * 60 * 1000, // 30 minutes
-	});
+	if (device.options.fullBackup) {
+		cli.macro("backup", {
+			timeout: 30 * 60 * 1000, // 30 minutes
+		});
 
-	try {
-		config.download("backupArchive", "/var/log/CPbackup/backups/netshot.tgz", { method: "scp" });
-	}
-	catch (e) {
-		var text = "" + e;
-		if (text.match(/SCP error/)) {
-			throw "SCP error: is the user in /etc/scpusers, with /bin/bash as login shell?";
+		try {
+			config.download("backupArchive", "/var/log/CPbackup/backups/netshot.tgz", { method: "scp" });
 		}
-		throw e;
-	}
-	finally {
-		cli.command("rm -f /var/log/CPbackup/backups/netshot.tgz")
+		catch (e) {
+			var text = "" + e;
+			if (text.match(/SCP error/)) {
+				throw "SCP error: is the user in /etc/scpusers, with /bin/bash as login shell?";
+			}
+			throw e;
+		}
+		finally {
+			cli.command("rm -f /var/log/CPbackup/backups/netshot.tgz")
+		}
 	}
 };
 

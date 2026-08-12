@@ -48,9 +48,35 @@ const validateRunScript = () => {
 			if (typeof inputDef.optional !== "boolean") {
 				throw `The 'optional' field in '${inputName}' input definition should be a boolean.`;
 			}
-			if (typeof inputDef.regExp !== "undefined") {
+			if (typeof inputDef.type === "undefined") {
+				inputDef.type = "text";
+			}
+			if (!["text", "list", "boolean"].includes(inputDef.type)) {
+				throw `The 'type' field in '${inputName}' input definition should be one of "text", "list" or "boolean".`;
+			}
+			if (inputDef.type === "list") {
+				if (!Array.isArray(inputDef.choices) || inputDef.choices.length === 0 ||
+					!inputDef.choices.every((choice) => typeof choice === "string")) {
+					throw `The 'choices' field in '${inputName}' input definition should be a non-empty array of strings.`;
+				}
+			}
+			if (inputDef.type === "boolean" && typeof inputDef.regExp !== "undefined") {
+				throw `The 'regExp' field is not applicable to boolean input '${inputName}'.`;
+			}
+			if (inputDef.type === "text" && typeof inputDef.regExp !== "undefined") {
 				if (typeof inputDef.regExp !== "object" || !(inputDef.regExp instanceof RegExp)) {
 					throw `The 'regExp' field in '${inputName}' input definition should be a RegExp object.`;
+				}
+			}
+			if (typeof inputDef.default !== "undefined") {
+				if (inputDef.type === "boolean" && typeof inputDef.default !== "boolean") {
+					throw `The 'default' field in '${inputName}' input definition should be a boolean.`;
+				}
+				if (inputDef.type === "list" && !inputDef.choices.includes(inputDef.default)) {
+					throw `The 'default' field in '${inputName}' input definition should be one of 'choices'.`;
+				}
+				if (inputDef.type === "text" && typeof inputDef.default !== "string") {
+					throw `The 'default' field in '${inputName}' input definition should be a string.`;
 				}
 			}
 		});
@@ -67,22 +93,35 @@ const validateUserInputs = (inputs) => {
 	const cleanInputs = {};
 	if (typeof Input === "object") {
 		Object.entries(Input).forEach(([inputName, inputDef]) => {
-			const inputVal = inputs && inputs[inputName];
-			if (!inputVal) {
-				if (!inputDef.optional) {
+			let inputVal = inputs && inputs[inputName];
+			if (typeof inputVal === "undefined" || inputVal === null || inputVal === "") {
+				if (typeof inputDef.default !== "undefined") {
+					inputVal = String(inputDef.default);
+				}
+				else if (!inputDef.optional) {
 					throw `${inputDef.label} is missing.`;
 				}
-				return;
-			}
-			if (typeof inputVal === "string") {
-				if (inputDef.regExp) {
-					if (!inputVal.match(inputDef.regExp)) {
-						throw `${inputDef.label} input value is invalid (doesn't match regexp).`
-					}
+				else {
+					return;
 				}
 			}
-			else {
+			if (typeof inputVal !== "string") {
 				throw `Invalid type for ${inputName} input.`;
+			}
+			if (inputDef.type === "boolean") {
+				if (inputVal !== "true" && inputVal !== "false") {
+					throw `${inputDef.label} input value should be "true" or "false".`;
+				}
+			}
+			else if (inputDef.type === "list") {
+				if (!inputDef.choices.includes(inputVal)) {
+					throw `${inputDef.label} input value is invalid (not one of the allowed choices).`;
+				}
+			}
+			else if (inputDef.regExp) {
+				if (!inputVal.match(inputDef.regExp)) {
+					throw `${inputDef.label} input value is invalid (doesn't match regexp).`
+				}
 			}
 			cleanInputs[inputName] = inputVal;
 		});
@@ -849,6 +888,10 @@ const _connect = (_function, _options) => {
 	};
 
 	const deviceHelper = {
+		// Per-device values of the driver-declared Options (see the
+		// top-level `Options` descriptor), read-only - drivers never write
+		// these back, they're set by the user through the UI.
+		options: _options.getDeviceHelper().getOptions(),
 		set: function(key, value) {
 			if (typeof(key) === "string") {
 				key = String(key);

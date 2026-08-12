@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoViptela",
 	description: "Viptela Operating System",
 	author: "Netshot Team",
-	version: "2.0"
+	version: "3.0"
 };
 
 var Config = {
@@ -75,6 +75,14 @@ var Device = {
 		title: "Memory size (MB)",
 		comparable: true,
 		checkable: true
+	},
+};
+
+var Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive (vManage only)",
+		default: true,
 	},
 };
 
@@ -308,7 +316,7 @@ function snapshot(cli, device, config) {
 		device.add("networkInterface", networkInterfaces[i]);
 	}
 
-	if (doBackup) {
+	if (doBackup && device.options.fullBackup) {
 		try {
 			cli.macro("bash");
 			// Remove any previous backup

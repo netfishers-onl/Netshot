@@ -28,7 +28,7 @@ const Info = {
 	name: "CiscoFirepowerMC",
 	description: "Cisco Firepower Management Center",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "2.0"
 };
 
 const Config = {
@@ -53,6 +53,14 @@ const Config = {
 };
 
 const Device = {
+};
+
+const Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive",
+		default: true,
+	},
 };
 
 const CLI = {
@@ -204,36 +212,38 @@ function snapshot(cli, device, config) {
 		device.add("networkInterface", networkInterface);
 	}
 
-	// Full backup
-	cli.macro("sudo");
-	cli.command("mkdir -p /var/sf/backup");
-	cli.command("/bin/rm -f /var/sf/backup/netshotbackup*");
-	cli.command("perl -MSF -e 'SF::BackupRestore::BackupSensor(\"netshotbackup\",1,[],[],undef,{},\"00000000-0000-0000-0000-000000000000\",undef,undef,0,1);'")
+	if (device.options.fullBackup) {
+		// Full backup
+		cli.macro("sudo");
+		cli.command("mkdir -p /var/sf/backup");
+		cli.command("/bin/rm -f /var/sf/backup/netshotbackup*");
+		cli.command("perl -MSF -e 'SF::BackupRestore::BackupSensor(\"netshotbackup\",1,[],[],undef,{},\"00000000-0000-0000-0000-000000000000\",undef,undef,0,1);'")
 
-	let maxLoops = 12 * 30; // 30 minutes
-	while (true) {
-		const backupSum = cli.command("sha256sum /var/sf/backup/netshotbackup*");
-		const backupMatch = backupSum.match(/^([0-9a-f]{64})\s+(\/var\/sf\/backup\/netshotbackup.*\.tar)$/m);
-		if (backupMatch) {
-			const checksum = backupMatch[1];
-			const backupPath = backupMatch[2];
-			try {
-				config.download("backupArchive", backupPath, { method: "sftp", checksum, newSession: true });
+		let maxLoops = 12 * 30; // 30 minutes
+		while (true) {
+			const backupSum = cli.command("sha256sum /var/sf/backup/netshotbackup*");
+			const backupMatch = backupSum.match(/^([0-9a-f]{64})\s+(\/var\/sf\/backup\/netshotbackup.*\.tar)$/m);
+			if (backupMatch) {
+				const checksum = backupMatch[1];
+				const backupPath = backupMatch[2];
+				try {
+					config.download("backupArchive", backupPath, { method: "sftp", checksum, newSession: true });
+				}
+				catch (e) {
+					var text = "" + e;
+					throw e;
+				}
+				finally {
+					cli.command(`rm -f ${backupPath}`);
+				}
+				break;
 			}
-			catch (e) {
-				var text = "" + e;
-				throw e;
+			maxLoops -= 1;
+			if (maxLoops <= 0) {
+				throw "The local backup took too long";
 			}
-			finally {
-				cli.command(`rm -f ${backupPath}`);
-			}
-			break;
+			cli.sleep(5000);
 		}
-		maxLoops -= 1;
-		if (maxLoops <= 0) {
-			throw "The local backup took too long";
-		}
-		cli.sleep(5000);
 	}
 };
 

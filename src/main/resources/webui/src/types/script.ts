@@ -1,8 +1,12 @@
+import { DriverOptionType } from "./device";
+
 export type ScriptUserInputDefinition = {
   name: string;
-  type: string;
+  type: DriverOptionType;
   label: string;
   description: string;
+  choices?: string[];
+  defaultValue?: string;
 };
 
 export type Script = {

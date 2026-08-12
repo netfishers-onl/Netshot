@@ -24,7 +24,7 @@ const Info = {
 	name: "FortinetFortiManager", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiManager and FortiAnalyzer", /* Description to be used in the UI. */
 	author: "Najihel",
-	version: "2.1" /* Version will appear in the Admin tab. */
+	version: "3.0" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -69,6 +69,17 @@ const Device = {
 		searchable: true,
 		checkable: true
 	}
+};
+
+/**
+ * 'Options' object = Per-device, user-configurable settings.
+ */
+const Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive",
+		default: true,
+	},
 };
 
 /**
@@ -251,53 +262,58 @@ function snapshot(cli, device, config) {
 		return cleaned;
 	}
 
-	try {
-		const ticket = config.requestUpload();
-		const backupName = "backup.tar";
-		const encryptPass = "netshot";
-		cli.command(`execute backup all-settings sftp ${ticket.host}:${ticket.port} ${backupName} ${ticket.username} ${ticket.password} ${encryptPass}`);
-		let md5 = null;
-		let attempt = 0;
-		while (true) {
-			const backupOutput = cli.command("", {
-				mode: { prompt: null },
-				discoverWaitTime: 5000,
-			});
-			const md5Match = backupOutput.match(/MD5: ([0-9a-f]+)/);
-			if (md5Match) {
-				md5 = md5Match[1];
-				cli.debug(`Archive MD5 checksum should be ${md5}`);
-			}
-			const resultMatch = backupOutput.match(/Backup all settings...(.+)/);
-			if (resultMatch) {
-				const result = resultMatch[1];
-				if (result !== "Ok.") {
-					cli.debug(`Full backup output:\n${backupOutput}`);
-					throw `Full backup (execute backup all-settings) returned ${result}`;
+	if (device.options.fullBackup) {
+		try {
+			const ticket = config.requestUpload();
+			const backupName = "backup.tar";
+			const encryptPass = "netshot";
+			cli.command(`execute backup all-settings sftp ${ticket.host}:${ticket.port} ${backupName} ${ticket.username} ${ticket.password} ${encryptPass}`);
+			let md5 = null;
+			let attempt = 0;
+			while (true) {
+				const backupOutput = cli.command("", {
+					mode: { prompt: null },
+					discoverWaitTime: 5000,
+				});
+				const md5Match = backupOutput.match(/MD5: ([0-9a-f]+)/);
+				if (md5Match) {
+					md5 = md5Match[1];
+					cli.debug(`Archive MD5 checksum should be ${md5}`);
 				}
-				break;
+				const resultMatch = backupOutput.match(/Backup all settings...(.+)/);
+				if (resultMatch) {
+					const result = resultMatch[1];
+					if (result !== "Ok.") {
+						cli.debug(`Full backup output:\n${backupOutput}`);
+						throw `Full backup (execute backup all-settings) returned ${result}`;
+					}
+					break;
+				}
+				attempt += 1;
+				if (attempt > 360) {
+					throw `Could not get full backup (execute backup all-settings) result after 15 minutes`;
+				}
 			}
-			attempt += 1;
-			if (attempt > 360) {
-				throw `Could not get full backup (execute backup all-settings) result after 15 minutes`;
+			const uploadResult = config.awaitUpload(ticket.id);
+			if (uploadResult.files.length !== 1) {
+				throw `Invalid number of files (${uploadResult.files.length}) received by Netshot server`;
+			}
+			const file = uploadResult.files[0];
+			config.commitUpload(ticket.id, file.id, "backupArchive", { checksum: md5 });
+		}
+		catch (e) {
+			const error = String(e);
+			if (error.match(/server is not running/)) {
+				cli.debug("Netshot SSH server is disabled, the full backup won't be taken");
+				config.computeHash(removeChangingParts(configuration));
+			}
+			else {
+				throw e;
 			}
 		}
-		const uploadResult = config.awaitUpload(ticket.id);
-		if (uploadResult.files.length !== 1) {
-			throw `Invalid number of files (${uploadResult.files.length}) received by Netshot server`;
-		}
-		const file = uploadResult.files[0];
-		config.commitUpload(ticket.id, file.id, "backupArchive", { checksum: md5 });
 	}
-	catch (e) {
-		const error = String(e);
-		if (error.match(/server is not running/)) {
-			cli.debug("Netshot SSH server is disabled, the full backup won't be taken");
-			config.computeHash(removeChangingParts(configuration));
-		}
-		else {
-			throw e;
-		}
+	else {
+		config.computeHash(removeChangingParts(configuration));
 	}
 };
 

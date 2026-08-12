@@ -2,23 +2,22 @@ import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import {
   Checkbox,
-  FormControl,
   MonacoEditorControl,
   ScheduleForm,
 } from "@/components"
 import DeviceTypeSelect from "../DeviceTypeSelect"
 import { ScheduleFormType } from "@/components/ScheduleForm"
 import { TaskDialog } from "@/features/task/components"
-import { MUTATIONS, QUERIES } from "@/constants"
+import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useDialogConfig } from "@/dialog"
 import { useDeviceTypeOptions } from "@/features/device/hooks"
 import { useToast } from "@/hooks"
-import { Device, DeviceTypeProtocol, Script, ScriptUserInputDefinition, SimpleDevice, TaskType } from "@/types"
+import { Device, DeviceTypeProtocol, DriverOptionType, Script, ScriptUserInputDefinition, SimpleDevice, TaskType } from "@/types"
+import DriverValueField from "@/features/device/components/DriverValueField"
 import {
   Badge,
   Box,
   Button,
-  Center,
   CloseButton,
   Dialog,
   Flex,
@@ -26,12 +25,11 @@ import {
   Icon,
   Portal,
   Separator,
-  Spinner,
   Stack,
   Text,
 } from "@chakra-ui/react"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { useMemo, useState } from "react"
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form"
 import { LuFileTerminal, LuMinimize2, LuPencil, LuPlus, LuSave } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
@@ -54,7 +52,7 @@ type ScriptMeta = {
 type RunDeviceScriptForm = {
   driver: string | null
   script: string
-  userInputs: Record<string, string>
+  userInputs: Record<string, string | boolean>
   debugEnabled: boolean
   runSnapshot: boolean
   runDiagnostics: boolean
@@ -187,21 +185,12 @@ type RunStepProps = {
   devices: SimpleDevice[] | Device[]
   onReorderDevices(devices: SimpleDevice[] | Device[]): void
   inputs: ScriptUserInputDefinition[]
-  isPending: boolean
 }
 
 function RunStep(props: RunStepProps) {
-  const { devices, onReorderDevices, inputs, isPending } = props
+  const { devices, onReorderDevices, inputs } = props
   const { t } = useTranslation()
   const form = useFormContext<RunDeviceScriptForm>()
-
-  if (isPending) {
-    return (
-      <Center flex="1">
-        <Spinner />
-      </Center>
-    )
-  }
 
   return (
     <Stack gap="6" flex="1">
@@ -238,12 +227,16 @@ function RunStep(props: RunStepProps) {
               {t("script.parameters")}
             </Heading>
             {inputs.map((input) => (
-              <FormControl
+              <DriverValueField
                 key={input.name}
-                label={input.label}
-                placeholder={input.description}
                 control={form.control}
                 name={`userInputs.${input.name}`}
+                definition={{
+                  type: input.type,
+                  label: input.label,
+                  description: input.description,
+                  choices: input.choices,
+                }}
               />
             ))}
           </Stack>
@@ -368,11 +361,6 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
     )
   }
 
-  function next() {
-    setFormStep(FormStep.Run)
-    dialogConfig.update({ variant: undefined, size: "lg" })
-  }
-
   function previous() {
     setFormStep(FormStep.Configure)
     applyConfigureSize(isExpanded)
@@ -382,32 +370,45 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
     dialogConfig.close()
   }
 
-  const validateEnabled = formStep === FormStep.Run && Boolean(driverValue) && Boolean(scriptValue)
+  const [validatedScript, setValidatedScript] = useState<Script | null>(null)
 
-  const {
-    data: validatedScript,
-    isPending: isValidatePending,
-    isSuccess: isValidateSuccess,
-  } = useQuery({
-    queryKey: [QUERIES.SCRIPT_VALIDATE, scriptValue, driverValue],
-    queryFn: async () =>
+  const validateMutation = useMutation({
+    mutationKey: MUTATIONS.SCRIPT_VALIDATE,
+    mutationFn: (values: { driver: string; script: string }) =>
       api.script.validate({
-        deviceDriver: driverValue!,
+        deviceDriver: values.driver,
         name: "#",
-        script: scriptValue,
+        script: values.script,
       }),
-    enabled: validateEnabled,
+    onError(err: NetshotError) {
+      toast.error(err)
+    },
   })
 
-  useEffect(() => {
-    if (isValidateSuccess) {
-      const userInputs: Record<string, string> = {}
-      for (const key in validatedScript!.userInputDefinitions) {
-        userInputs[validatedScript!.userInputDefinitions[key].name] = ""
-      }
-      form.setValue("userInputs", userInputs)
+  async function next() {
+    if (!driverValue || !scriptValue) return
+
+    let script: Script | null
+    try {
+      script = await validateMutation.mutateAsync({ driver: driverValue, script: scriptValue })
+    } catch {
+      return
     }
-  }, [isValidateSuccess, validatedScript, form])
+    if (!script) return
+
+    const userInputs: Record<string, string | boolean> = {}
+    for (const key in script.userInputDefinitions) {
+      const definition = script.userInputDefinitions[key]
+      userInputs[definition.name] =
+        definition.type === DriverOptionType.Boolean
+          ? definition.defaultValue === "true"
+          : (definition.defaultValue ?? "")
+    }
+    form.setValue("userInputs", userInputs)
+    setValidatedScript(script)
+    setFormStep(FormStep.Run)
+    dialogConfig.update({ variant: undefined, size: "lg" })
+  }
 
   const inputs = useMemo(() => {
     if (!validatedScript?.userInputDefinitions) return []
@@ -427,7 +428,7 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
   async function submit(values: RunDeviceScriptForm) {
     const {
       schedule,
-      userInputs,
+      userInputs: rawUserInputs,
       debugEnabled,
       runSnapshot,
       runDiagnostics,
@@ -435,6 +436,15 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
       driver,
       script,
     } = values
+
+    // Wire format is Map<String,String> - booleans (from Switch fields) are
+    // sent as the literal "true"/"false" strings, matching driver-loader.js's
+    // validateUserInputs().
+    const userInputs: Record<string, string> = {}
+    for (const key in rawUserInputs) {
+      const value = rawUserInputs[key]
+      userInputs[key] = typeof value === "boolean" ? String(value) : value
+    }
 
     const task = await runMutation.mutateAsync(
       devices.length > 1
@@ -530,7 +540,6 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
                     devices={orderedDevices}
                     onReorderDevices={setOrderedDevices}
                     inputs={inputs}
-                    isPending={isValidatePending}
                   />
                 )}
               </Dialog.Body>
@@ -541,7 +550,11 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
                     {t("common.previous")}
                   </Button>
                   {formStep === FormStep.Configure && (
-                    <Button disabled={!canProceedToRun} onClick={next}>
+                    <Button
+                      disabled={!canProceedToRun || validateMutation.isPending}
+                      loading={validateMutation.isPending}
+                      onClick={next}
+                    >
                       {t("common.next")}
                     </Button>
                   )}

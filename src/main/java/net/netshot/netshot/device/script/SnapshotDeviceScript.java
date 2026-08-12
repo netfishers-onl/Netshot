@@ -142,6 +142,9 @@ public final class SnapshotDeviceScript extends DeviceScript {
 			driver.loadCode(context);
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, jsCliHelper, session, this.taskContext, false);
 			options.setDeviceHelper(deviceHelper);
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Device {} options: {}", device.getId(), deviceHelper.resolveOptionValues());
+			}
 			Config config = new Config(device);
 			Config lastConfig = Database.unproxy(device.getLastConfig());
 			JsConfigHelper configHelper = new JsConfigHelper(device, config, lastConfig, jsCliHelper, this.taskContext);

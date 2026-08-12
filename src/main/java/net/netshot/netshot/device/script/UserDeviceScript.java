@@ -19,7 +19,9 @@
 package net.netshot.netshot.device.script;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.DriverValueType;
 import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
@@ -59,10 +62,6 @@ import net.netshot.netshot.work.TaskContext;
 @Slf4j
 public class UserDeviceScript extends DeviceScript {
 
-	public enum UserInputType {
-		STRING,
-	}
-
 	/**
 	 * Definition of user input data.
 	 */
@@ -79,7 +78,7 @@ public class UserDeviceScript extends DeviceScript {
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
-		private UserInputType type;
+		private DriverValueType type;
 
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -93,13 +92,27 @@ public class UserDeviceScript extends DeviceScript {
 		@Setter
 		private String description;
 
+		/** Valid choices, only set when {@link #type} is {@code LIST}. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private List<String> choices;
+
+		/** Default value, as a raw string (e.g. "true"/"false" for BOOLEAN). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String defaultValue;
+
 		public UserInputDefinition(String name) {
 			this.name = name;
 			this.label = StringUtils.capitalize(name);
-			this.type = UserInputType.STRING;
+			this.type = DriverValueType.TEXT;
 		}
 
-		public UserInputDefinition(String name, UserInputType type, String label, String description) {
+		public UserInputDefinition(String name, DriverValueType type, String label, String description) {
 			this.name = name;
 			this.label = label;
 			this.description = description;
@@ -235,6 +248,40 @@ public class UserDeviceScript extends DeviceScript {
 						throw new IllegalArgumentException(String.format("Invalid 'label' type in definition of '%s'", name));
 					}
 					definition.setLabel(labelValue.asString());
+				}
+				final Value typeValue = member.getMember("type");
+				if (typeValue != null) {
+					if (!typeValue.isString()) {
+						throw new IllegalArgumentException(String.format("Invalid 'type' type in definition of '%s'", name));
+					}
+					switch (typeValue.asString()) {
+						case "text":
+							definition.setType(DriverValueType.TEXT);
+							break;
+						case "list":
+							definition.setType(DriverValueType.LIST);
+							break;
+						case "boolean":
+							definition.setType(DriverValueType.BOOLEAN);
+							break;
+						default:
+							throw new IllegalArgumentException(String.format("Invalid 'type' value in definition of '%s'", name));
+					}
+				}
+				final Value choicesValue = member.getMember("choices");
+				if (choicesValue != null) {
+					if (!choicesValue.hasArrayElements()) {
+						throw new IllegalArgumentException(String.format("Invalid 'choices' type in definition of '%s'", name));
+					}
+					final List<String> choices = new ArrayList<>();
+					for (long i = 0; i < choicesValue.getArraySize(); i++) {
+						choices.add(choicesValue.getArrayElement(i).asString());
+					}
+					definition.setChoices(choices);
+				}
+				final Value defaultValue = member.getMember("default");
+				if (defaultValue != null) {
+					definition.setDefaultValue(defaultValue.isString() ? defaultValue.asString() : defaultValue.toString());
 				}
 				definitions.put(name, definition);
 			}

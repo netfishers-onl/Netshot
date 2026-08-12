@@ -21,7 +21,7 @@ const Info = {
 	name: "F5TMOS",
 	description: "F5 TM-OS, 11.x and newer",
 	author: "Netshot Team",
-	version: "3.1"
+	version: "4.0"
 };
 
 const Config = {
@@ -74,6 +74,14 @@ const Device = {
 		title: "Product",
 		searchable: true,
 	}
+};
+
+const Options = {
+	"fullBackup": {
+		type: "Boolean",
+		title: "Take full backup archive (UCS and SCF)",
+		default: true,
+	},
 };
 
 const CLI = {
@@ -360,28 +368,30 @@ function snapshot(cli, device, config) {
 		throw `Unable to compute hash of file ${path}:\n${output}`;
 	};
 
-	// Save and download UCS
-	const ucsPath = "/var/local/ucs/netshot.ucs";
-	cli.command(`rm -f ${ucsPath}`);
-	const saveUcs = cli.command(`tmsh -q save /sys ucs ${ucsPath}`, { timeout: 5 * 60 * 1000 });
-	if (!saveUcs.match(/is saved/)) {
-		throw `Unable to save UCS archive:\n${saveUcs}`;
-	}
-	const ucsCheckum = computeHash(ucsPath);
-	config.download("ucsArchive", ucsPath, { method: "scp", checksum: ucsCheckum });
-	cli.command(`rm -f ${ucsPath}`);
+	if (device.options.fullBackup) {
+		// Save and download UCS
+		const ucsPath = "/var/local/ucs/netshot.ucs";
+		cli.command(`rm -f ${ucsPath}`);
+		const saveUcs = cli.command(`tmsh -q save /sys ucs ${ucsPath}`, { timeout: 5 * 60 * 1000 });
+		if (!saveUcs.match(/is saved/)) {
+			throw `Unable to save UCS archive:\n${saveUcs}`;
+		}
+		const ucsCheckum = computeHash(ucsPath);
+		config.download("ucsArchive", ucsPath, { method: "scp", checksum: ucsCheckum });
+		cli.command(`rm -f ${ucsPath}`);
 
-	// Save and download SCF
-	const scfPath = "/var/local/scf/netshot";
-	const saveScf = cli.command(
-		`tmsh -q save /sys config file ${scfPath} no-passphrase`, { timeout: 5 * 60 * 1000 });
-	if (!saveScf.match(/\.tar/)) {
-		throw `Unable to save SCF archive:\n${saveScf}`;
+		// Save and download SCF
+		const scfPath = "/var/local/scf/netshot";
+		const saveScf = cli.command(
+			`tmsh -q save /sys config file ${scfPath} no-passphrase`, { timeout: 5 * 60 * 1000 });
+		if (!saveScf.match(/\.tar/)) {
+			throw `Unable to save SCF archive:\n${saveScf}`;
+		}
+		const scfTarPath = `${scfPath}.tar`;
+		const scfChecksum = computeHash(scfTarPath);
+		config.download("scfArchive", scfTarPath, { method: "scp", checksum: scfChecksum });
+		cli.command(`rm -f ${scfPath}*`);
 	}
-	const scfTarPath = `${scfPath}.tar`;
-	const scfChecksum = computeHash(scfTarPath);
-	config.download("scfArchive", scfTarPath, { method: "scp", checksum: scfChecksum });
-	cli.command(`rm -f ${scfPath}*`);
 }
 
 

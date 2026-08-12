@@ -4,6 +4,7 @@ import { Switch } from "@/components"
 import { DomainSelect } from "@/features/administration/components"
 import DeviceTypeSelect from "./DeviceTypeSelect"
 import DeviceAccessFields, { buildAccessesPayload, DeviceAccessFormValue } from "./DeviceAccessFields"
+import DeviceOptionFields, { buildOptionsPayload, DeviceOptionFormValue } from "./DeviceOptionFields"
 import FormControl from "@/components/FormControl"
 import { TaskDialog } from "@/features/task/components"
 import { MUTATIONS } from "@/constants"
@@ -26,6 +27,7 @@ type Form = {
   autoDiscover: boolean
   deviceType?: DeviceType["name"] | null
   accesses?: DeviceAccessFormValue[]
+  options?: Record<string, DeviceOptionFormValue>
 }
 
 export type CreateDeviceTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
@@ -41,27 +43,38 @@ function DeviceCreateForm() {
   const selectedDeviceType = getOptionByDriver(deviceType)?.value
 
   return (
-    <Stack gap="6">
-      <DomainSelect required control={form.control} name="domain" />
-      <FormControl
-        required
-        label={t("device.mgmtAddress")}
-        placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })}
-        control={form.control}
-        name="ipAddress"
-        rules={validators.hostOrIp()}
-      />
-      <Separator />
-      <Switch label={t("device.autodiscover")} description={t("device.automaticallyDiscoverType")} control={form.control} name="autoDiscover" />
+    <Stack direction="row" overflow="auto" flex="1">
+      <Stack w="340px" flexShrink={0} overflow="auto" gap="6">
+        <DomainSelect required control={form.control} name="domain" />
+        <FormControl
+          required
+          label={t("device.mgmtAddress")}
+          placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })}
+          control={form.control}
+          name="ipAddress"
+          rules={validators.hostOrIp()}
+        />
+        <Separator />
+        <Switch label={t("device.autodiscover")} description={t("device.automaticallyDiscoverType")} control={form.control} name="autoDiscover" />
+      </Stack>
       {!autoDiscover && (
         <>
-          <DeviceTypeSelect required label={t("device.type")} control={form.control} name="deviceType" />
-          {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
-            <>
-              <Separator />
-              <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
-            </>
-          )}
+          <Separator orientation="vertical" />
+          <Stack flex="1" overflow="auto" gap="6">
+            <DeviceTypeSelect required label={t("device.type")} control={form.control} name="deviceType" />
+            {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
+              <>
+                <Separator />
+                <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
+              </>
+            )}
+            {selectedDeviceType && Object.keys(selectedDeviceType.options ?? {}).length > 0 && (
+              <>
+                <Separator />
+                <DeviceOptionFields control={form.control} setValue={form.setValue} optionDefinitions={selectedDeviceType.options} />
+              </>
+            )}
+          </Stack>
         </>
       )}
     </Stack>
@@ -74,6 +87,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
   const dialog = useFormDialogWithMutation()
   const taskDialog = useCustomDialog()
   const { data: credentialSets } = useCredentialSets()
+  const { getOptionByDriver } = useDeviceTypeOptions()
 
   const form = useForm<Form>({
     mode: "onChange",
@@ -83,6 +97,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
       domain: null,
       autoDiscover: true,
       accesses: [],
+      options: {},
       deviceType: null,
     },
   })
@@ -116,13 +131,19 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
           newDevice.accesses = accesses
         }
 
+        const optionDefinitions = getOptionByDriver(values?.deviceType ?? null)?.value?.options
+        const options = buildOptionsPayload(values.options, optionDefinitions)
+        if (Object.keys(options).length > 0) {
+          newDevice.options = options
+        }
+
         const task = await mutation.mutateAsync(newDevice)
 
         dialogRef.close()
 
         taskDialog.open(<TaskDialog id={task!.id} />)
       },
-      size: "lg",
+      size: "4xl",
       submitButton: {
         label: t("common.create"),
       },

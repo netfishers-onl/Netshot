@@ -22,7 +22,7 @@ export default function EditDiagnosticScript(props: EditDiagnosticScriptProps) {
         <EditDiagnosticForm type={type} />
       </Stack>
       <Stack flex="1">
-        <MonacoEditorControl required control={form.control} name="script" language={language} />
+        <MonacoEditorControl required control={form.control} name="script" language={language} scriptKind="diagnostic" />
       </Stack>
     </Stack>
   )

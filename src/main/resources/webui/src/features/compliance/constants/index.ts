@@ -12,8 +12,10 @@ export const QUERIES = {
 
 export const RULE_SCRIPT_TEMPLATE = {
   [RuleType.Javascript]: `
-/*
- * Script template - to be customized.
+/**
+ * Check device compliance - script template.
+ * @param {ComplianceDevice} device
+ * @returns {ComplianceVerdict | ComplianceResult}
  */
 function check(device) {
     //const config = device.get("runningConfig");
@@ -22,7 +24,7 @@ function check(device) {
     //return NONCONFORMING;
     //return NOTAPPLICABLE;
 }
-      `,
+`,
   [RuleType.Python]: `
 # Script template - to be customized
 def check(device):
@@ -34,5 +36,5 @@ def check(device):
   return result_option.CONFORMING
   # return {'result': result_option.NONCONFORMING, 'comment': 'Why it is not fine'}
   # return result_option.NOTAPPLICABLE
-      `,
+`,
 }

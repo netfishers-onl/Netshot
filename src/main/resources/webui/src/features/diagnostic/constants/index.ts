@@ -9,6 +9,11 @@ export const QUERIES = {
 
 export const SCRIPT_TEMPLATES = {
   [DiagnosticType.Javascript]: `
+    /**
+     * @param {Cli} client
+     * @param {ScriptDevice} device
+     * @param {DiagnosticHelper} diagnostic
+     */
     function diagnose(client, device, diagnostic) {
       const cli = client.create("cli");
       cli.macro("enable");

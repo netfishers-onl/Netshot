@@ -268,6 +268,40 @@ const resolveAccessNames = (nameOrArray) => {
 	return { family, accessNames };
 };
 
+/**
+ * Wraps `target` in a new, frozen object exposing only bound copies of the
+ * named public members - methods delegate to `target` (so its own internal
+ * state mutations, e.g. `this._mode = ...`, keep working exactly as
+ * before), plain data properties are copied by reference. The returned
+ * facade can't have its members reassigned/deleted, and no property not in
+ * `memberNames` is reachable through it at all - used to harden every
+ * object handed off to user-authored scripts (run/diagnose) against
+ * tampering, without changing any of the internal implementation above.
+ */
+function freezeFacade(target, memberNames) {
+	const facade = {};
+	for (const name of memberNames) {
+		const member = target[name];
+		if (member === undefined) {
+			continue;
+		}
+		facade[name] = (typeof member === "function" ? member.bind(target) : member);
+	}
+	return Object.freeze(facade);
+}
+
+const PUBLIC_CLI_MEMBERS =
+	["command", "macro", "findSections", "sleep", "debug", "tryNextCredentials", "create", "userInputs"];
+const PUBLIC_SNMP_MEMBERS = ["get", "walk", "sleep", "tryNextCredentials"];
+const PUBLIC_HTTP_MEMBERS =
+	["request", "get", "delete", "head", "options", "post", "put", "patch", "tryNextCredentials", "sleep", "debug"];
+const PUBLIC_DEVICE_MEMBERS = ["options", "set", "add", "get", "textDownload"];
+const PUBLIC_CONFIG_MEMBERS = [
+	"set", "download", "computeHash", "getHash", "getLastHash",
+	"isChangedHash", "requestUpload", "awaitUpload", "commitUpload",
+];
+const PUBLIC_DIAGNOSTIC_MEMBERS = ["set"];
+
 const _connect = (_function, _options) => {
 
 	const _taskContext = _options.getTaskContext();
@@ -1173,25 +1207,41 @@ const _connect = (_function, _options) => {
 		const resolved = resolveAccessNames(nameOrArray);
 		const factory = _options.getClientFactory();
 		if (resolved.family === "cli") {
-			return makeCliClient(factory.createCli(resolved.accessNames, autoTryCredentials), autoTryCredentials);
+			return freezeFacade(
+				makeCliClient(factory.createCli(resolved.accessNames, autoTryCredentials), autoTryCredentials),
+				PUBLIC_CLI_MEMBERS
+			);
 		}
 		if (resolved.family === "snmp") {
-			return makeSnmpClient(factory.createSnmp(resolved.accessNames, autoTryCredentials));
+			return freezeFacade(makeSnmpClient(factory.createSnmp(resolved.accessNames, autoTryCredentials)), PUBLIC_SNMP_MEMBERS);
 		}
 		// http
-		return makeHttpClient(factory.createHttp(resolved.accessNames, autoTryCredentials, createOptions.basePath || null));
+		return freezeFacade(
+			makeHttpClient(factory.createHttp(resolved.accessNames, autoTryCredentials, createOptions.basePath || null)),
+			PUBLIC_HTTP_MEMBERS
+		);
 	};
 
 	if (_function === "snapshot") {
 		_options.getDeviceHelper().reset();
-		snapshot(client, deviceHelper, configHelper);
+		snapshot(
+			freezeFacade(client, PUBLIC_CLI_MEMBERS),
+			freezeFacade(deviceHelper, PUBLIC_DEVICE_MEMBERS),
+			freezeFacade(configHelper, PUBLIC_CONFIG_MEMBERS)
+		);
 	}
 	else if (_function === "run") {
 		validateRunScript();
 		client.userInputs = validateUserInputs(_options.getUserInputs() || {});
-		run(client, deviceHelper, configHelper);
+		run(
+			freezeFacade(client, PUBLIC_CLI_MEMBERS),
+			freezeFacade(deviceHelper, PUBLIC_DEVICE_MEMBERS),
+			freezeFacade(configHelper, PUBLIC_CONFIG_MEMBERS)
+		);
 	}
 	else if (_function === "diagnostics") {
+		const frozenClient = freezeFacade(client, PUBLIC_CLI_MEMBERS);
+		const frozenDeviceHelper = freezeFacade(deviceHelper, PUBLIC_DEVICE_MEMBERS);
 		const diagnostics = _options.getDiagnosticHelper().getDiagnostics();
 		for (let name in diagnostics) {
 			try {
@@ -1199,11 +1249,11 @@ const _connect = (_function, _options) => {
 				diagnosticHelper.setKey(name);
 				if (typeof diagnostic === "function") {
 					const diagnose = diagnostic;
-					diagnose(client, deviceHelper, diagnosticHelper);
+					diagnose(frozenClient, frozenDeviceHelper, freezeFacade(diagnosticHelper, PUBLIC_DIAGNOSTIC_MEMBERS));
 				}
 				else {
-					client.macro(diagnostic.getMode());
-					const output = client.command(diagnostic.getCommand());
+					frozenClient.macro(diagnostic.getMode());
+					const output = frozenClient.command(diagnostic.getCommand());
 					diagnosticHelper.set(output);
 				}
 			}

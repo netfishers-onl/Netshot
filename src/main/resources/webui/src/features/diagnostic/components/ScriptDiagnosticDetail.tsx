@@ -12,6 +12,6 @@ export default function ScriptDiagnosticDetail() {
   }, [diagnostic?.type])
 
   return (
-    <MonacoEditor value={diagnostic?.script} language={language} readOnly />
+    <MonacoEditor value={diagnostic?.script} language={language} scriptKind="diagnostic" readOnly />
   )
 }

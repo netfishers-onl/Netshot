@@ -38,7 +38,7 @@ export default function EditScriptRuleForm(props: EditScriptRuleFormProps) {
 
       {/* Right — script editor */}
       <Stack flex="1" overflow="auto">
-        <MonacoEditorControl required control={form.control} name="script" language={language} />
+        <MonacoEditorControl required control={form.control} name="script" language={language} scriptKind="compliance" />
       </Stack>
     </Stack>
   )

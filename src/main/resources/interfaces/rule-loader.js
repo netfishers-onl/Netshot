@@ -21,6 +21,27 @@ const NONCONFORMING = "NONCONFORMING";
 const NOTAPPLICABLE = "NOTAPPLICABLE";
 const CONFORMING = "CONFORMING";
 
+const PUBLIC_COMPLIANCE_DEVICE_MEMBERS = ["get", "nslookup", "findSections"];
+
+/**
+ * Wraps `target` in a new, frozen object exposing only bound copies of the
+ * named public members - see driver-loader.js's freezeFacade for the full
+ * rationale (kept as a separate, differently-named copy here since
+ * rule-loader.js is evaluated as an entirely independent GraalJS source
+ * from driver-loader.js, with no shared scope to reuse a common helper).
+ */
+function freezeComplianceFacade(target, memberNames) {
+	const facade = {};
+	for (const name of memberNames) {
+		const member = target[name];
+		if (member === undefined) {
+			continue;
+		}
+		facade[name] = (typeof member === "function" ? member.bind(target) : member);
+	}
+	return Object.freeze(facade);
+}
+
 function _check(_deviceHelper) {
 
 	const debug = (message) => {
@@ -103,7 +124,7 @@ function _check(_deviceHelper) {
 	};
 
 
-	const r = check(device, debug);
+	const r = check(freezeComplianceFacade(device, PUBLIC_COMPLIANCE_DEVICE_MEMBERS), debug);
 
 	if (typeof r === "string") {
 		return {

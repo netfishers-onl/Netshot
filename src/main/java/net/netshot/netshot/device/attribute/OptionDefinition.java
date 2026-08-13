@@ -63,7 +63,7 @@ public final class OptionDefinition {
 	@Setter
 	private DriverValueType type;
 
-	/** Valid choices, only set when {@link #type} is {@code LIST}. */
+	/** Valid choices restricting a TEXT option's value; when set, the value must be one of these. */
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
@@ -72,7 +72,7 @@ public final class OptionDefinition {
 
 	/**
 	 * Default value, typed to match {@link #type}: a {@link Boolean} for
-	 * BOOLEAN, a {@link String} for TEXT/LIST - never a stringified "true"/
+	 * BOOLEAN, a {@link String} for TEXT - never a stringified "true"/
 	 * "false", so it can be stored and returned as real JSON, matching how
 	 * {@link net.netshot.netshot.device.Device#getOptions()} persists values.
 	 */
@@ -97,19 +97,19 @@ public final class OptionDefinition {
 			case "Text":
 				this.type = DriverValueType.TEXT;
 				break;
-			case "List":
-				this.type = DriverValueType.LIST;
-				break;
 			case "Boolean":
 				this.type = DriverValueType.BOOLEAN;
 				break;
 			default:
 				throw new IllegalArgumentException("Invalid type for item %s.".formatted(name));
 		}
-		if (this.type == DriverValueType.LIST) {
-			Value choicesValue = data.getMember("choices");
-			if (choicesValue == null || !choicesValue.hasArrayElements() || choicesValue.getArraySize() == 0) {
-				throw new IllegalArgumentException("Missing or invalid 'choices' for item %s.".formatted(name));
+		Value choicesValue = data.getMember("choices");
+		if (choicesValue != null) {
+			if (this.type != DriverValueType.TEXT) {
+				throw new IllegalArgumentException("'choices' is not applicable to item %s.".formatted(name));
+			}
+			if (!choicesValue.hasArrayElements() || choicesValue.getArraySize() == 0) {
+				throw new IllegalArgumentException("Invalid 'choices' for item %s.".formatted(name));
 			}
 			List<String> choices = new ArrayList<>();
 			for (long i = 0; i < choicesValue.getArraySize(); i++) {
@@ -130,7 +130,7 @@ public final class OptionDefinition {
 					throw new IllegalArgumentException("The 'default' value for item %s should be a string.".formatted(name));
 				}
 				String textDefault = defaultMember.asString();
-				if (this.type == DriverValueType.LIST && !this.choices.contains(textDefault)) {
+				if (this.choices != null && !this.choices.contains(textDefault)) {
 					throw new IllegalArgumentException("Invalid 'default' value for item %s.".formatted(name));
 				}
 				this.defaultValue = textDefault;

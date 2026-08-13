@@ -26,6 +26,5 @@ package net.netshot.netshot.device;
  */
 public enum DriverValueType {
 	TEXT,
-	LIST,
 	BOOLEAN,
 }

@@ -92,7 +92,7 @@ public class UserDeviceScript extends DeviceScript {
 		@Setter
 		private String description;
 
-		/** Valid choices, only set when {@link #type} is {@code LIST}. */
+		/** Valid choices restricting a TEXT input's value; when set, the value must be one of these. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
@@ -257,9 +257,6 @@ public class UserDeviceScript extends DeviceScript {
 					switch (typeValue.asString()) {
 						case "text":
 							definition.setType(DriverValueType.TEXT);
-							break;
-						case "list":
-							definition.setType(DriverValueType.LIST);
 							break;
 						case "boolean":
 							definition.setType(DriverValueType.BOOLEAN);

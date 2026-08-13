@@ -36,9 +36,10 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the {@code Input} object of ad-hoc "run script on device"
- * scripts: text/list/boolean parameter declaration and value validation
- * (see {@code driver-loader.js}'s {@code validateRunScript}/{@code
- * validateUserInputs}, called via {@link UserDeviceScript}).
+ * scripts: text/boolean parameter declaration and value validation, including
+ * a text input restricted by {@code choices} (see {@code driver-loader.js}'s
+ * {@code validateRunScript}/{@code validateUserInputs}, called via
+ * {@link UserDeviceScript}).
  */
 public class UserDeviceScriptTest {
 
@@ -59,7 +60,6 @@ public class UserDeviceScriptTest {
 				regExp: /^[a-z0-9-]+$/,
 			},
 			backupMode: {
-				type: "list",
 				label: "Backup mode",
 				choices: ["running-config", "startup-config", "both"],
 				default: "running-config",
@@ -87,7 +87,7 @@ public class UserDeviceScriptTest {
 	}
 
 	@Test
-	@DisplayName("Text, list and boolean inputs are parsed with their type/choices/default")
+	@DisplayName("Text, choices-restricted and boolean inputs are parsed with their type/choices/default")
 	void parsesAllInputTypes() throws Exception {
 		UserDeviceScript script = this.buildScript(SCRIPT_WITH_ALL_TYPES, new HashMap<>());
 		Map<String, UserInputDefinition> definitions = script.extractInputDefinitions();
@@ -98,7 +98,7 @@ public class UserDeviceScriptTest {
 
 		UserInputDefinition backupMode = definitions.get("backupMode");
 		Assertions.assertNotNull(backupMode, "The 'backupMode' input should exist");
-		Assertions.assertEquals(DriverValueType.LIST, backupMode.getType());
+		Assertions.assertEquals(DriverValueType.TEXT, backupMode.getType());
 		Assertions.assertEquals(
 			List.of("running-config", "startup-config", "both"), backupMode.getChoices());
 		Assertions.assertEquals("running-config", backupMode.getDefaultValue());
@@ -132,8 +132,8 @@ public class UserDeviceScriptTest {
 	}
 
 	@Test
-	@DisplayName("A list value outside the declared choices is rejected")
-	void invalidListValueIsRejected() {
+	@DisplayName("A value outside the declared choices is rejected")
+	void invalidChoiceValueIsRejected() {
 		Map<String, String> values = new HashMap<>();
 		values.put("hostname", "router1");
 		values.put("backupMode", "not-a-choice");

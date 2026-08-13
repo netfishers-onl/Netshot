@@ -168,7 +168,7 @@ public class Device {
 	 * which the driver populates during a snapshot, these are set by the
 	 * user and only read by the driver at runtime. Values are typed to match
 	 * their option's declared type (a real {@code Boolean} for a BOOLEAN
-	 * option, a {@code String} for TEXT/LIST), stored as-is in the JSON
+	 * option, a {@code String} for TEXT), stored as-is in the JSON
 	 * column rather than as stringified text.
 	 */
 	@Getter(onMethod = @__({

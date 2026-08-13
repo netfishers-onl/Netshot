@@ -243,7 +243,6 @@ export type DeviceAccessDefinition = {
 
 export enum DriverOptionType {
   Text = "TEXT",
-  List = "LIST",
   Boolean = "BOOLEAN",
 }
 

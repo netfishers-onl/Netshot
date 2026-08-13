@@ -1902,7 +1902,7 @@ public class DeviceDriverTest {
 					default: true,
 				},
 				backupMode: {
-					type: "List",
+					type: "Text",
 					title: "Backup mode",
 					choices: ["running-config", "startup-config", "both"],
 					default: "running-config",
@@ -1959,7 +1959,7 @@ public class DeviceDriverTest {
 		}
 
 		@Test
-		@DisplayName("Text, List and Boolean options are parsed with their title/choices/default")
+		@DisplayName("Text, choices-restricted and Boolean options are parsed with their title/choices/default")
 		void parsesAllOptionTypes() throws Exception {
 			DeviceDriver driver = this.buildDriver(OPTIONS_DRIVER_JS, "OptionsTestDriver.js");
 
@@ -1972,7 +1972,7 @@ public class DeviceDriverTest {
 
 			OptionDefinition backupMode = driver.getOptions().get("backupMode");
 			Assertions.assertNotNull(backupMode, "The 'backupMode' option should exist");
-			Assertions.assertEquals(DriverValueType.LIST, backupMode.getType());
+			Assertions.assertEquals(DriverValueType.TEXT, backupMode.getType());
 			Assertions.assertEquals(
 				List.of("running-config", "startup-config", "both"), backupMode.getChoices());
 			Assertions.assertEquals("running-config", backupMode.getDefaultValue());
@@ -1991,19 +1991,19 @@ public class DeviceDriverTest {
 		}
 
 		@Test
-		@DisplayName("A List option without 'choices' is rejected")
-		void listOptionWithoutChoicesIsRejected() {
+		@DisplayName("A Boolean option with 'choices' is rejected")
+		void booleanOptionWithChoicesIsRejected() {
 			String js = badOptionsDriverJs(
-				"{ mode: { type: \"List\", title: \"Mode\" } }");
+				"{ mode: { type: \"Boolean\", title: \"Mode\", choices: [\"a\", \"b\"] } }");
 			Assertions.assertThrows(IllegalArgumentException.class,
 				() -> this.buildDriver(js, "BadOptionsTestDriver.js"));
 		}
 
 		@Test
-		@DisplayName("A List option whose default is not one of its choices is rejected")
-		void listOptionWithInvalidDefaultIsRejected() {
+		@DisplayName("A Text option whose default is not one of its choices is rejected")
+		void textOptionWithInvalidDefaultIsRejected() {
 			String js = badOptionsDriverJs(
-				"{ mode: { type: \"List\", title: \"Mode\", choices: [\"a\", \"b\"], default: \"c\" } }");
+				"{ mode: { type: \"Text\", title: \"Mode\", choices: [\"a\", \"b\"], default: \"c\" } }");
 			Assertions.assertThrows(IllegalArgumentException.class,
 				() -> this.buildDriver(js, "BadOptionsTestDriver.js"));
 		}
@@ -2065,7 +2065,7 @@ public class DeviceDriverTest {
 				Assertions.assertEquals(Boolean.TRUE, options.getMember("fullBackup"),
 					"Default Boolean option value should be a real boolean, not a string");
 				Assertions.assertEquals("running-config", options.getMember("backupMode"),
-					"List option value should remain a plain string");
+					"Text option value should remain a plain string");
 
 				device.setOptions(Map.of("fullBackup", Boolean.FALSE));
 				ProxyObject updatedOptions = (ProxyObject) helper.getOptions();

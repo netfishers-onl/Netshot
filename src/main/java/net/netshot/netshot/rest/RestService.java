@@ -2095,8 +2095,8 @@ public class RestService extends Thread {
 	/**
 	 * Validates posted per-device Options values against the driver's declared
 	 * {@link OptionDefinition}s: every key must be a known option, and the value
-	 * must be properly typed for it (a real boolean for BOOLEAN, one of
-	 * {@code choices} for LIST, any string for TEXT) - values are stored as-is,
+	 * must be properly typed for it (a real boolean for BOOLEAN, a string for
+	 * TEXT - one of {@code choices} when declared) - values are stored as-is,
 	 * as real JSON, not stringified (see {@link net.netshot.netshot.device.Device#getOptions()}).
 	 * @param driver the device's driver, or null if not known yet - a non-empty
 	 *        options map is rejected in that case
@@ -2132,17 +2132,15 @@ public class RestService extends Thread {
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 					}
 					break;
-				case LIST:
-					if (!(value instanceof String) || !definition.getChoices().contains(value)) {
-						throw new NetshotBadRequestException(
-							"Option '%s' is not one of the allowed choices.".formatted(entry.getKey()),
-							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
-					}
-					break;
 				case TEXT:
 					if (!(value instanceof String)) {
 						throw new NetshotBadRequestException(
 							"Option '%s' should be a string.".formatted(entry.getKey()),
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+					}
+					if (definition.getChoices() != null && !definition.getChoices().contains(value)) {
+						throw new NetshotBadRequestException(
+							"Option '%s' is not one of the allowed choices.".formatted(entry.getKey()),
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 					}
 					break;

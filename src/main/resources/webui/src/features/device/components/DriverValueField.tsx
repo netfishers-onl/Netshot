@@ -20,8 +20,9 @@ export type DriverValueFieldProps<T extends FieldValues> = {
 /**
  * Renders a single driver-declared, user-provided field (a script `Input`
  * parameter or a per-device `Options` entry - both share the same
- * text/list/boolean type vocabulary), dispatching to the matching existing
- * widget rather than introducing new ones.
+ * text/boolean type vocabulary), dispatching to the matching existing
+ * widget rather than introducing new ones. A non-empty `choices` list
+ * renders as a select regardless of type; only the value's type changes.
  */
 export default function DriverValueField<T extends FieldValues>(props: DriverValueFieldProps<T>) {
   const { control, name, definition } = props
@@ -30,8 +31,8 @@ export default function DriverValueField<T extends FieldValues>(props: DriverVal
     return <Switch control={control} name={name} label={definition.label} description={definition.description} />
   }
 
-  if (definition.type === DriverOptionType.List) {
-    const options = (definition.choices ?? []).map((choice) => ({ label: choice, value: choice }))
+  if (definition.choices && definition.choices.length > 0) {
+    const options = definition.choices.map((choice) => ({ label: choice, value: choice }))
     return (
       <Select
         control={control}

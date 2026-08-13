@@ -51,10 +51,13 @@ const validateRunScript = () => {
 			if (typeof inputDef.type === "undefined") {
 				inputDef.type = "text";
 			}
-			if (!["text", "list", "boolean"].includes(inputDef.type)) {
-				throw `The 'type' field in '${inputName}' input definition should be one of "text", "list" or "boolean".`;
+			if (!["text", "boolean"].includes(inputDef.type)) {
+				throw `The 'type' field in '${inputName}' input definition should be one of "text" or "boolean".`;
 			}
-			if (inputDef.type === "list") {
+			if (typeof inputDef.choices !== "undefined") {
+				if (inputDef.type !== "text") {
+					throw `The 'choices' field is not applicable to '${inputName}' input.`;
+				}
 				if (!Array.isArray(inputDef.choices) || inputDef.choices.length === 0 ||
 					!inputDef.choices.every((choice) => typeof choice === "string")) {
 					throw `The 'choices' field in '${inputName}' input definition should be a non-empty array of strings.`;
@@ -72,11 +75,11 @@ const validateRunScript = () => {
 				if (inputDef.type === "boolean" && typeof inputDef.default !== "boolean") {
 					throw `The 'default' field in '${inputName}' input definition should be a boolean.`;
 				}
-				if (inputDef.type === "list" && !inputDef.choices.includes(inputDef.default)) {
-					throw `The 'default' field in '${inputName}' input definition should be one of 'choices'.`;
-				}
 				if (inputDef.type === "text" && typeof inputDef.default !== "string") {
 					throw `The 'default' field in '${inputName}' input definition should be a string.`;
+				}
+				if (inputDef.type === "text" && inputDef.choices && !inputDef.choices.includes(inputDef.default)) {
+					throw `The 'default' field in '${inputName}' input definition should be one of 'choices'.`;
 				}
 			}
 		});
@@ -113,7 +116,7 @@ const validateUserInputs = (inputs) => {
 					throw `${inputDef.label} input value should be "true" or "false".`;
 				}
 			}
-			else if (inputDef.type === "list") {
+			else if (inputDef.choices) {
 				if (!inputDef.choices.includes(inputVal)) {
 					throw `${inputDef.label} input value is invalid (not one of the allowed choices).`;
 				}

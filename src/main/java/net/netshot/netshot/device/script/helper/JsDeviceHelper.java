@@ -492,7 +492,7 @@ public final class JsDeviceHelper {
 	 *
 	 * <p>Values are already correctly typed in {@link Device#getOptions()}
 	 * (a real {@code Boolean} for a BOOLEAN option, a {@code String} for
-	 * TEXT/LIST) and passed through as-is.</p>
+	 * TEXT) and passed through as-is.</p>
 	 *
 	 * @return the effective option values, keyed by option name
 	 */

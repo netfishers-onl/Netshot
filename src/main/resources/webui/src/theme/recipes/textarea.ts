@@ -22,7 +22,6 @@ export const textAreaRecipe = defineRecipe({
           outlineColor: "green.600/16",
           bg: "white",
         },
-        boxShadow: "initial!important",
         _disabled: {
           opacity: 1,
           bg: "grey.100",

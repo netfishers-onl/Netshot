@@ -35,7 +35,6 @@ export const selectSlotRecipe = defineSlotRecipe({
     },
     control: {
       borderRadius: "xl",
-      boxShadow: "initial!important",
     },
   },
   variants: {

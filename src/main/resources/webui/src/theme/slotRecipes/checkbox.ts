@@ -11,7 +11,6 @@ export const checkboxSlotRecipe = defineSlotRecipe({
       borderRadius: "md",
       border: "1px solid {colors.grey.100}",
       bg: "white",
-      boxShadow: "0 2px 4px 0 rgba(202, 207, 226, .16)",
       transition: "all .2s ease",
     },
     indicator: {

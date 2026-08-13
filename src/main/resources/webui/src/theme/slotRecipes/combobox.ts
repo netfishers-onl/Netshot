@@ -24,7 +24,6 @@ export const comboboxSlotRecipe = defineSlotRecipe({
             opacity: 1,
             color: "grey.400",
           },
-          boxShadow: "initial!important",
           _disabled: {
             opacity: 1,
             bg: "grey.100",
@@ -41,7 +40,6 @@ export const comboboxSlotRecipe = defineSlotRecipe({
           borderRadius: "2xl",
           p: 2,
           border: "none",
-          boxShadow: "0 2px 10px 0 rgba(140, 149, 159, .16)",
           textStyle: "md",
         },
         item: {

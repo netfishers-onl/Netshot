@@ -28,7 +28,6 @@ export const buttonRecipe = defineRecipe({
         borderWidth: "1px",
         color: "black",
         borderColor: "grey.100",
-        boxShadow: "0 2px 4px 0 rgba(202, 207, 226, .16)",
         _hover: {
           bg: "grey.50",
         },
@@ -40,7 +39,6 @@ export const buttonRecipe = defineRecipe({
       primary: {
         bg: "green.600",
         color: "white",
-        boxShadow: "0 2px 4px 0 rgba(202, 207, 226, .16)",
         _hover: {
           bg: "green.500",
         },

@@ -21,7 +21,6 @@ export const datePickerSlotRecipe = defineSlotRecipe({
     },
     control: {
       borderRadius: "xl",
-      boxShadow: "initial!important",
     },
     input: {
       fontSize: "md",

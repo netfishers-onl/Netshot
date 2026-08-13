@@ -47,7 +47,6 @@ export const numberInputSlotRecipe = defineSlotRecipe({
             opacity: 1,
             color: "grey.400",
           },
-          boxShadow: "initial!important",
           _disabled: {
             opacity: 1,
             bg: "grey.100",

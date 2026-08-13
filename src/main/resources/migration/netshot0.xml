@@ -1957,15 +1957,15 @@
 		<!-- SSH host key / HTTPS certificate verification, per (device, access).
 			Column defaults double as the required defaults for both brand-new
 			accesses and the migration of every existing device_access row:
-			SSH defaults to TRUST_KNOWN (trust-on-first-use when ssh_trusted_host_keys
-			is still empty, strict check once it isn't), HTTPS defaults to the system
-			truststore - both notably safer than the previous accept-all
-			behavior, without breaking already-working devices outright (a
-			SSH host key gets silently learned on the first connection after
-			upgrade; a HTTPS access whose certificate isn't CA-trusted will
-			start failing and needs an explicit CUSTOM_CA/TRUST_ANY choice). -->
+			SSH defaults to TRUST_ANY (matching the historical accept-any
+			behavior, so no already-working device starts failing to connect
+			after upgrade), HTTPS defaults to the system truststore - safer
+			than the previous accept-all behavior, without breaking
+			already-working devices outright (a HTTPS access whose
+			certificate isn't CA-trusted will start failing and needs an
+			explicit CUSTOM_CA/TRUST_ANY choice). -->
 		<addColumn tableName="device_access">
-			<column name="ssh_host_key_verification" type="VARCHAR(255)" value="TRUST_KNOWN">
+			<column name="ssh_host_key_verification" type="VARCHAR(255)" value="TRUST_ANY">
 				<constraints nullable="false"/>
 			</column>
 			<column name="ssh_trusted_host_keys" type="LONGTEXT"/>

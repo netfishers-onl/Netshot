@@ -194,7 +194,7 @@ public final class DeviceAccess {
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private SshHostKeyVerification sshHostKeyVerification = SshHostKeyVerification.TRUST_KNOWN;
+	private SshHostKeyVerification sshHostKeyVerification = SshHostKeyVerification.TRUST_ANY;
 
 	/**
 	 * Trusted SSH host keys for this access, known_hosts-style: one

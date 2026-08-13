@@ -14,7 +14,6 @@ import {
   Tag,
   Text,
 } from "@chakra-ui/react"
-import { useMemo } from "react"
 import { LuAlignLeft, LuChevronDown, LuPencil, LuPlus, LuTrash } from "react-icons/lu"
 import { SiJavascript, SiPython } from "react-icons/si"
 import { useTranslation } from "react-i18next"
@@ -23,7 +22,7 @@ import { RuleType } from "@/types"
 import AddRuleTrigger from "../components/AddRuleTrigger"
 import EditPolicyTrigger from "../components/EditPolicyTrigger"
 import RemovePolicyTrigger from "../components/RemovePolicyTrigger"
-import { usePolicies } from "../api"
+import { usePolicy, usePolicyRules } from "../api"
 import { EmptyResult } from "@/components"
 import { DeviceGroupBadge } from "@/components/entity"
 
@@ -38,12 +37,10 @@ export default function ConfigurationCompliancePolicyScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
-  const { data: policies, isPending } = usePolicies()
-
-  const policy = useMemo(
-    () => policies?.find((p) => p.id === +(policyId ?? 0)),
-    [policies, policyId]
-  )
+  const numericPolicyId = +(policyId ?? 0)
+  const { data: policy, isPending: isPolicyPending } = usePolicy(numericPolicyId)
+  const { data: rules, isPending: isRulesPending } = usePolicyRules(numericPolicyId)
+  const isPending = isPolicyPending || isRulesPending
 
   if (!isPending && !policy) {
     return (
@@ -132,10 +129,10 @@ export default function ConfigurationCompliancePolicyScreen() {
         <Heading as="h2" fontSize="2xl" fontWeight="semibold">
           {t("policy.rule.labelPlural")}
         </Heading>
-        {!isPending && policy?.rules?.length === 0 && (
+        {!isPending && rules?.length === 0 && (
           <Text color="grey.400">{t("common.noRuleFound")}</Text>
         )}
-        {policy?.rules?.map((rule) => (
+        {rules?.map((rule) => (
           <Flex
             key={rule.id}
             alignItems="center"

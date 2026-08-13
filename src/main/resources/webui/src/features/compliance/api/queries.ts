@@ -24,6 +24,37 @@ export function usePolicies() {
   })
 }
 
+// Fetches only the policies' own metadata (no rules), so opening a single
+// policy doesn't trigger a rules fetch for every policy (that's what
+// `getAllWithRules` does under the hood). The query key deliberately excludes
+// policyId so switching between policies reuses the same cached list instead
+// of issuing a new `GET /policies` per policy; staleTime is left open-ended
+// since policy CRUD mutations already invalidate [QUERIES.POLICY_LIST].
+export function usePolicy(policyId: number) {
+  return useQuery({
+    queryKey: [QUERIES.POLICY_LIST, "metadata"],
+    queryFn: () => api.policy.getAll(),
+    select(policies) {
+      return policies.find((policy) => policy.id === policyId)
+    },
+    enabled: !!policyId,
+    staleTime: Infinity,
+  })
+}
+
+// Fetches the rules of a single policy, scoped by policyId so opening one
+// policy doesn't refetch the rules of every other policy.
+export function usePolicyRules(policyId: number) {
+  return useQuery({
+    queryKey: [FEATURE_QUERIES.POLICY_RULE_LIST, policyId],
+    queryFn: () => api.rule.getAll(policyId),
+    select(rules) {
+      return sortAlphabetical([...rules], "name")
+    },
+    enabled: !!policyId,
+  })
+}
+
 export function usePoliciesWithOptions() {
   return useQuery({
     queryKey: [QUERIES.POLICY_OPTION_LIST],
@@ -67,7 +98,7 @@ export function useRulesWithOptions(policyId: number) {
   })
 }
 
-export function useUpdateRule(rule: Rule) {
+export function useUpdateRule(rule: Rule, policyId: number) {
   const queryClient = useQueryClient()
   const toast = useToast()
 
@@ -86,6 +117,9 @@ export function useUpdateRule(rule: Rule) {
       })
       queryClient.invalidateQueries({
         queryKey: [FEATURE_QUERIES.RULE_DETAIL],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [FEATURE_QUERIES.POLICY_RULE_LIST, policyId],
       })
     },
   })

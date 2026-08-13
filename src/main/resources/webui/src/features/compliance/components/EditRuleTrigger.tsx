@@ -42,7 +42,7 @@ export default function EditRuleTrigger({ policyId, rule, children, ...rest }: E
     defaultValues,
   })
 
-  const mutation = useUpdateRule(rule)
+  const mutation = useUpdateRule(rule, policyId)
 
   const hasScript = useMemo(
     () => rule?.type === RuleType.Javascript || rule?.type === RuleType.Python,

@@ -18,12 +18,12 @@ import { LuAlignLeft, LuChevronDown, LuPencil, LuPlus, LuTrash } from "react-ico
 import { SiJavascript, SiPython } from "react-icons/si"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
-import { RuleType } from "@/types"
+import { Level, RuleType } from "@/types"
 import AddRuleTrigger from "../components/AddRuleTrigger"
 import EditPolicyTrigger from "../components/EditPolicyTrigger"
 import RemovePolicyTrigger from "../components/RemovePolicyTrigger"
 import { usePolicy, usePolicyRules } from "../api"
-import { EmptyResult } from "@/components"
+import { EmptyResult, Protected } from "@/components"
 import { DeviceGroupBadge } from "@/components/entity"
 
 function getRuleIcon(type: RuleType) {
@@ -58,6 +58,7 @@ export default function ConfigurationCompliancePolicyScreen() {
         </Skeleton>
 
         <Spacer />
+        <Protected minLevel={Level.ReadWrite}>
         <Skeleton loading={isPending}>
           <Menu.Root positioning={{ placement: "bottom-end" }}>
             <Group attached>
@@ -104,6 +105,7 @@ export default function ConfigurationCompliancePolicyScreen() {
             </Portal>
           </Menu.Root>
         </Skeleton>
+        </Protected>
       </Flex>
 
       <Stack gap="3">
@@ -158,12 +160,14 @@ export default function ConfigurationCompliancePolicyScreen() {
           </Flex>
         ))}
         {policy && (
-          <AddRuleTrigger policy={policy}>
-            <Button variant="outline" alignSelf="flex-start">
-              <LuPlus />
-              {t("policy.rule.add")}
-            </Button>
-          </AddRuleTrigger>
+          <Protected minLevel={Level.ReadWrite}>
+            <AddRuleTrigger policy={policy}>
+              <Button variant="outline" alignSelf="flex-start">
+                <LuPlus />
+                {t("policy.rule.add")}
+              </Button>
+            </AddRuleTrigger>
+          </Protected>
         )}
       </Stack>
     </Stack>

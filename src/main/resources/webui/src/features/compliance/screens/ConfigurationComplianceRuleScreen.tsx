@@ -1,10 +1,10 @@
 import api from "@/api"
 import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
-import { EmptyResult, MonacoEditor } from "@/components"
+import { EmptyResult, MonacoEditor, Protected } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useLocalization } from "@/i18n"
 import { LuAsterisk, LuMessageSquareDot, LuZap, LuZapOff, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
-import { RuleType } from "@/types"
+import { Level, RuleType } from "@/types"
 import {
   Badge,
   Box,
@@ -132,6 +132,7 @@ export default function ConfigurationComplianceRuleScreen() {
           </Skeleton>
 
           <Spacer />
+          <Protected minLevel={Level.ReadWrite}>
           <Skeleton loading={isPending}>
             <Menu.Root positioning={{ placement: "bottom-end" }}>
               <Group attached>
@@ -190,6 +191,7 @@ export default function ConfigurationComplianceRuleScreen() {
               </Portal>
             </Menu.Root>
           </Skeleton>
+          </Protected>
         </Flex>
         {rule?.type === RuleType.Text && (
           <Stack gap="3">

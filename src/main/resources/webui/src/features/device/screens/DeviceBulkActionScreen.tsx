@@ -67,7 +67,7 @@ export default function DeviceBulkActionScreen() {
               </Button>
             </DeviceDiagnosticTrigger>
           </Protected>
-          <Protected minLevel={Level.Operator}>
+          <Protected minLevel={Level.ReadWrite}>
             <BulkEditDeviceTrigger devices={selected}>
               <Button justifyContent="start">
                 <LuSquarePen />
@@ -91,7 +91,7 @@ export default function DeviceBulkActionScreen() {
               </DisableDeviceTrigger>
             </ButtonGroup>
           </Protected>
-          <Protected minLevel={Level.Operator}>
+          <Protected minLevel={Level.ReadWrite}>
             <RemoveDeviceTrigger devices={selected}>
               <Button justifyContent="start">
                 <LuTrash />

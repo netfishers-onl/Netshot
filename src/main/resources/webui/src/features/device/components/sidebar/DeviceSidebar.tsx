@@ -30,12 +30,14 @@ export default function DeviceSidebar() {
         <Stack p="6">
           <Menu.Root positioning={{ placement: "top" }}>
             <Group attached w="full">
-              <CreateDeviceTrigger>
-                <Button flex="1">
-                  <LuPlus />
-                  {t("device.add")}
-                </Button>
-              </CreateDeviceTrigger>
+              <Protected minLevel={Level.ReadWrite}>
+                <CreateDeviceTrigger>
+                  <Button flex="1">
+                    <LuPlus />
+                    {t("device.add")}
+                  </Button>
+                </CreateDeviceTrigger>
+              </Protected>
               <Menu.Trigger asChild>
                 <IconButton aria-label={t("common.actions")}>
                   <LuChevronUp />
@@ -57,12 +59,14 @@ export default function DeviceSidebar() {
                       {t("task.runNewGroupTask")}
                     </Menu.Item>
                   </AddTaskTrigger>
-                  <AddGroupTrigger>
-                    <Menu.Item value="add-group">
-                      <LuGrid2X2Plus />
-                      {t("group.add")}
-                    </Menu.Item>
-                  </AddGroupTrigger>
+                  <Protected minLevel={Level.ReadWrite}>
+                    <AddGroupTrigger>
+                      <Menu.Item value="add-group">
+                        <LuGrid2X2Plus />
+                        {t("group.add")}
+                      </Menu.Item>
+                    </AddGroupTrigger>
+                  </Protected>
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>

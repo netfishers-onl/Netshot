@@ -24,17 +24,19 @@ export default function DiagnosticSidebar() {
               <Separator />
 
               {query ? <DiagnosticSidebarSearchList /> : <DiagnosticSidebarList />}
-              <Protected minLevel={Level.ReadWrite}>
+              <Protected minLevel={Level.Operator}>
                 <Separator />
                 <Stack p="6">
                   <Menu.Root positioning={{ placement: "top" }}>
                     <Group attached w="full">
-                      <AddDiagnosticTrigger>
-                        <Button flex="1">
-                          <LuPlus />
-                          {t("diagnostic.add")}
-                        </Button>
-                      </AddDiagnosticTrigger>
+                      <Protected minLevel={Level.ExecureReadWrite}>
+                        <AddDiagnosticTrigger>
+                          <Button flex="1">
+                            <LuPlus />
+                            {t("diagnostic.add")}
+                          </Button>
+                        </AddDiagnosticTrigger>
+                      </Protected>
                       <Menu.Trigger asChild>
                         <IconButton aria-label={t("common.actions")}>
                           <LuChevronUp />

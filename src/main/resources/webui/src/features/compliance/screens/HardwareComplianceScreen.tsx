@@ -212,12 +212,14 @@ export default function HardwareComplianceScreen() {
               title={t("compliance.hardware.noRule")}
               description={t("compliance.hardware.canAddRule")}
             >
-              <AddHardwareRuleTrigger>
-                <Button variant="outline">
-                  <LuPlus />
-                  {t("policy.rule.add")}
-                </Button>
-              </AddHardwareRuleTrigger>
+              <Protected minLevel={Level.ReadWrite}>
+                <AddHardwareRuleTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("policy.rule.add")}
+                  </Button>
+                </AddHardwareRuleTrigger>
+              </Protected>
             </EmptyResult>
           )}
         </>

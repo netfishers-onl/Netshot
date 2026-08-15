@@ -49,12 +49,14 @@ export default function ComplianceSidebar() {
                 <Stack p="6">
                   <Menu.Root positioning={{ placement: "top" }}>
                     <Group attached w="full">
-                      <AddPolicyTrigger>
-                        <Button flex="1">
-                          <LuPlus />
-                          {t("policy.add")}
-                        </Button>
-                      </AddPolicyTrigger>
+                      <Protected minLevel={Level.ReadWrite}>
+                        <AddPolicyTrigger>
+                          <Button flex="1">
+                            <LuPlus />
+                            {t("policy.add")}
+                          </Button>
+                        </AddPolicyTrigger>
+                      </Protected>
                       <Menu.Trigger asChild>
                         <IconButton aria-label={t("common.actions")}>
                           <LuChevronUp />

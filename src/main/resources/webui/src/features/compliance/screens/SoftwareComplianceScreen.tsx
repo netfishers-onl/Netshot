@@ -294,12 +294,14 @@ export default function SoftwareComplianceScreen() {
                 title={t("compliance.software.noRule")}
                 description={t("compliance.software.canAddRule")}
               >
-                <AddSoftwareRuleTrigger>
-                  <Button variant="outline">
-                    <LuPlus />
-                    {t("policy.rule.add")}
-                  </Button>
-                </AddSoftwareRuleTrigger>
+                <Protected minLevel={Level.ReadWrite}>
+                  <AddSoftwareRuleTrigger>
+                    <Button variant="outline">
+                      <LuPlus />
+                      {t("policy.rule.add")}
+                    </Button>
+                  </AddSoftwareRuleTrigger>
+                </Protected>
               </EmptyResult>
             )}
           </>

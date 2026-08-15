@@ -1,6 +1,6 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { LogPanel } from "@/components"
+import { LogPanel, Protected } from "@/components"
 import TaskChildrenDialog from "./TaskChildrenDialog"
 import TaskStatusBadge, { TASK_STATUS_CONFIG } from "./TaskStatusBadge"
 import { MUTATIONS, QUERIES } from "@/constants"
@@ -9,7 +9,7 @@ import { DeviceBadge, DeviceGroupBadge } from "@/components/entity"
 import { QUERIES as TASK_QUERIES, TASK_TYPE_ICONS } from "../constants"
 import { useToast } from "@/hooks"
 import { useLocalization } from "@/i18n"
-import { TaskScheduleMode, TaskScheduleType, TaskStatus, TaskType } from "@/types"
+import { Level, TaskScheduleMode, TaskScheduleType, TaskStatus, TaskType } from "@/types"
 import { getSchedulePriorityLabel } from "@/utils"
 import { BarSegment, BarSegmentData, useChart } from "@chakra-ui/charts"
 import {
@@ -681,28 +681,32 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </LogPanel>
                 )}
                 {task?.debugEnabled && isTaskOver && (
-                  <Button size="sm" variant="ghost" asChild>
-                    <a
-                      href={`/api/tasks/${task.id}/debuglog`}
-                      download={`task-${task.id}-debug.log`}
-                    >
-                      <LuDownload />
-                      {t("admin.logs.debug")}
-                    </a>
-                  </Button>
+                  <Protected minLevel={Level.ReadWrite}>
+                    <Button size="sm" variant="ghost" asChild>
+                      <a
+                        href={`/api/tasks/${task.id}/debuglog`}
+                        download={`task-${task.id}-debug.log`}
+                      >
+                        <LuDownload />
+                        {t("admin.logs.debug")}
+                      </a>
+                    </Button>
+                  </Protected>
                 )}
               </Stack>
               <Stack direction="row" gap="3">
                 {(task?.status === TaskStatus.Scheduled ||
                   (task?.status === TaskStatus.Running && isGroupTask)) && (
-                  <Button
-                    colorPalette="red"
-                    variant="ghost"
-                    onClick={openCancelConfirm}
-                    loading={cancelMutation.isPending}
-                  >
-                    {t("task.cancelTask")}
-                  </Button>
+                  <Protected minLevel={Level.ReadWrite}>
+                    <Button
+                      colorPalette="red"
+                      variant="ghost"
+                      onClick={openCancelConfirm}
+                      loading={cancelMutation.isPending}
+                    >
+                      {t("task.cancelTask")}
+                    </Button>
+                  </Protected>
                 )}
                 <Button variant="default" onClick={() => dialogConfig.close()}>
                   {t("common.close")}

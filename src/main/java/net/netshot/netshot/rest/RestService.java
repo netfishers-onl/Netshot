@@ -1710,6 +1710,9 @@ public class RestService extends Thread {
 		throws WebApplicationException {
 		log.debug("REST request, device types.");
 		if (refresh) {
+			if (!securityContext.isUserInRole(User.ROLE_ADMIN)) {
+				throw new NetshotNotAuthorizedException("Insufficient permissions to reload the device drivers.", 0);
+			}
 			ClusterManager.requestDriverReload();
 			try {
 				DeviceDriver.refreshDrivers();

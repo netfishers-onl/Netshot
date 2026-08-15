@@ -68,6 +68,10 @@
     "vite": "^8.2.0"
   },
   "allowScripts": {
-    "vue-demi@0.14.10": true
+    "vue-demi@0.14.10": true,
+    "@swc/core@1.15.41": true
+  },
+  "overrides": {
+    "dompurify": "3.4.13"
   }
 }

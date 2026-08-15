@@ -1,4 +1,5 @@
 import { Protected, SidebarLink } from "@/components"
+import { useAuth } from "@/contexts"
 import { LuChevronUp, LuCheck, LuPlus, LuTrophy } from "react-icons/lu"
 import { Level, TaskType } from "@/types"
 import { Button, Group, IconButton, Menu, Portal, Separator, Stack, Text } from "@chakra-ui/react"
@@ -13,6 +14,12 @@ import ComplianceSidebarSearchList from "./ComplianceSidebarSearchList"
 
 export default function ComplianceSidebar() {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  // Group's `attached` styling clones props onto its direct children only, so
+  // the add-policy button must be Group's direct child rather than hidden
+  // behind a <Protected> wrapper - otherwise it never receives the
+  // data-first/data-last attributes that remove its adjoining rounded corner.
+  const isReadWrite = (user?.level || 0) >= Level.ReadWrite
 
   return (
     <ComplianceSidebarProvider>
@@ -49,14 +56,14 @@ export default function ComplianceSidebar() {
                 <Stack p="6">
                   <Menu.Root positioning={{ placement: "top" }}>
                     <Group attached w="full">
-                      <Protected minLevel={Level.ReadWrite}>
+                      {isReadWrite && (
                         <AddPolicyTrigger>
                           <Button flex="1">
                             <LuPlus />
                             {t("policy.add")}
                           </Button>
                         </AddPolicyTrigger>
-                      </Protected>
+                      )}
                       <Menu.Trigger asChild>
                         <IconButton aria-label={t("common.actions")}>
                           <LuChevronUp />

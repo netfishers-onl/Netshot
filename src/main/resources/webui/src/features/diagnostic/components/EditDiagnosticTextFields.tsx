@@ -35,7 +35,7 @@ export default function EditDiagnosticTextFields(props: StackProps) {
   }, [cliModeOptions, cliMode, form])
 
   return (
-    <Stack gap="6" p="3" {...props}>
+    <Stack gap="6" {...props}>
       <Select
         required
         label={t("device.type")}

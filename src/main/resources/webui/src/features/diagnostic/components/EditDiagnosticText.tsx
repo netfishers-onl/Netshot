@@ -11,12 +11,12 @@ export default function EditDiagnosticText(props: EditDiagnosticTextProps) {
   const { type } = props
 
   return (
-    <Stack direction="row" overflow="auto" flex="1">
-      <Stack w="340px" flexShrink={0} overflow="auto">
+    <Stack direction="row" overflow="auto" flex="1" gap="7">
+      <Stack w="340px" flexShrink={0} overflow="auto" p="1">
         <EditDiagnosticForm type={type} />
       </Stack>
       <Separator orientation="vertical" />
-      <Stack flex="1" overflow="auto">
+      <Stack flex="1" overflow="auto" p="1">
         <EditDiagnosticTextFields />
       </Stack>
     </Stack>

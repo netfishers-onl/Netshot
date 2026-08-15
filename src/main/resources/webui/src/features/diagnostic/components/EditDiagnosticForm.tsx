@@ -23,7 +23,7 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
   const resultTypeOptions = useResultTypeOptions()
 
   return (
-    <Stack gap="6" p="3" {...other}>
+    <Stack gap="6" {...other}>
       <FormControl
         required
         label={t("common.name")}

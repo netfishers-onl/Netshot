@@ -1,4 +1,5 @@
 import { Protected } from "@/components"
+import { useAuth } from "@/contexts"
 import { AddGroupTrigger } from "@/features/group"
 import { LuChevronUp, LuCrosshair, LuGrid2X2Plus, LuPlus, LuWorkflow } from "react-icons/lu"
 import { Level } from "@/types"
@@ -16,6 +17,12 @@ import DeviceSidebarSearchList from "./DeviceSidebarSearchList"
 export default function DeviceSidebar() {
   const { t } = useTranslation()
   const query = useDeviceSidebarStore((state) => state.query)
+  const { user } = useAuth()
+  // Group's `attached` styling clones props onto its direct children only, so
+  // the add-device button must be Group's direct child rather than hidden
+  // behind a <Protected> wrapper - otherwise it never receives the
+  // data-first/data-last attributes that remove its adjoining rounded corner.
+  const isReadWrite = (user?.level || 0) >= Level.ReadWrite
 
   return (
     <Stack w="full" h="full" overflow="hidden" gap="0">
@@ -30,14 +37,14 @@ export default function DeviceSidebar() {
         <Stack p="6">
           <Menu.Root positioning={{ placement: "top" }}>
             <Group attached w="full">
-              <Protected minLevel={Level.ReadWrite}>
+              {isReadWrite && (
                 <CreateDeviceTrigger>
                   <Button flex="1">
                     <LuPlus />
                     {t("device.add")}
                   </Button>
                 </CreateDeviceTrigger>
-              </Protected>
+              )}
               <Menu.Trigger asChild>
                 <IconButton aria-label={t("common.actions")}>
                   <LuChevronUp />

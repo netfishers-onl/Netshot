@@ -41,17 +41,15 @@ function DeviceEditForm() {
 
   const selectedDeviceType = getOptionByDriver(deviceType)?.value
   const isDriverMissing = !isPending && Boolean(deviceType) && !selectedDeviceType
+  const hasAccesses = Boolean(selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0)
+  const hasOptions = Boolean(selectedDeviceType && Object.keys(selectedDeviceType.options ?? {}).length > 0)
 
   return (
-    <Stack direction="row" overflow="auto" flex="1">
-      <Stack w="340px" flexShrink={0} overflow="auto" gap="6" p="3">
+    <Stack direction="row" overflow="auto" flex="1" gap="7">
+      <Stack w="340px" flexShrink={0} overflow="auto" gap="6" p="1">
         <FormControl readOnly label={t("common.name")} placeholder={t("device.name")} control={form.control} name="name" />
         <DomainSelect control={form.control} name="mgmtDomain" />
         <FormControl required label={t("device.mgmtAddress")} placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })} control={form.control} name="ipAddress" rules={validators.hostOrIp()} />
-        <FormControl type={FormControlType.LongText} autosize rows={2} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
-      </Stack>
-      <Separator orientation="vertical" />
-      <Stack flex="1" overflow="auto" gap="6" p="3">
         {isDriverMissing ? (
           <Alert.Root variant="warning">
             <Alert.Indicator />
@@ -62,17 +60,16 @@ function DeviceEditForm() {
         ) : (
           <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
         )}
-        {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
-          <>
-            <Separator />
-            <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
-          </>
+        <FormControl type={FormControlType.LongText} autosize rows={2} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
+      </Stack>
+      <Separator orientation="vertical" />
+      <Stack flex="1" overflow="auto" gap="6" p="1">
+        {hasAccesses && (
+          <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType!.accessDefinitions} />
         )}
-        {selectedDeviceType && Object.keys(selectedDeviceType.options ?? {}).length > 0 && (
-          <>
-            <Separator />
-            <DeviceOptionFields control={form.control} setValue={form.setValue} optionDefinitions={selectedDeviceType.options} />
-          </>
+        {hasAccesses && hasOptions && <Separator />}
+        {hasOptions && (
+          <DeviceOptionFields control={form.control} setValue={form.setValue} optionDefinitions={selectedDeviceType!.options} />
         )}
       </Stack>
     </Stack>

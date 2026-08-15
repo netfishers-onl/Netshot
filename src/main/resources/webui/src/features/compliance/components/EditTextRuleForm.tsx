@@ -202,7 +202,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   return (
     <Stack direction="row" gap="7" flex="1" minH="0" overflow="hidden">
       {/* Left — base fields */}
-      <Stack p="3" pe="4" w="280px" flexShrink={0} overflow="hidden" h="full">
+      <Stack w="280px" flexShrink={0} overflow="hidden" h="full" p="1">
         <Stack gap="6">
           <FormControl
             required
@@ -218,7 +218,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
       </Stack>
 
       {/* Right — text-rule fields */}
-      <Stack gap="4" p="3" flex="1" overflow="auto">
+      <Stack gap="4" flex="1" overflow="auto" p="1">
         <Text fontWeight="semibold" fontSize="lg">
           {t("policy.rule.fieldToCheck")}
         </Text>

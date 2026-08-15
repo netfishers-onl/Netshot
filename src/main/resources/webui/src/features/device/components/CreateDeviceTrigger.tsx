@@ -8,7 +8,7 @@ import DeviceOptionFields, { buildOptionsPayload, DeviceOptionFormValue } from "
 import FormControl from "@/components/FormControl"
 import { TaskDialog } from "@/features/task/components"
 import { MUTATIONS } from "@/constants"
-import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
+import { useCustomDialog, useDialogConfig, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { DeviceType } from "@/types"
 import validators from "@/utils/validators"
@@ -16,7 +16,7 @@ import { Separator, Stack } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import React from "react"
+import React, { useEffect } from "react"
 import Slot from "@/components/Slot"
 import { useCredentialSets } from "../api"
 import { useDeviceTypeOptions } from "../hooks"
@@ -32,19 +32,32 @@ type Form = {
 
 export type CreateDeviceTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
+const EXPANDED_SIZE = "4xl"
+const COLLAPSED_SIZE = "sm"
+
 function DeviceCreateForm() {
   const form = useFormContext()
   const { t } = useTranslation()
   const { getOptionByDriver } = useDeviceTypeOptions()
+  const dialogConfig = useDialogConfig()
 
   const autoDiscover = useWatch({ control: form.control, name: "autoDiscover" })
   const deviceType = useWatch({ control: form.control, name: "deviceType" })
 
   const selectedDeviceType = getOptionByDriver(deviceType)?.value
+  const hasAccesses = Boolean(selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0)
+  const hasOptions = Boolean(selectedDeviceType && Object.keys(selectedDeviceType.options ?? {}).length > 0)
+  const showRightColumn = !autoDiscover && (hasAccesses || hasOptions)
+
+  const updateDialogConfig = dialogConfig.update
+
+  useEffect(() => {
+    updateDialogConfig({ size: showRightColumn ? EXPANDED_SIZE : COLLAPSED_SIZE })
+  }, [showRightColumn, updateDialogConfig])
 
   return (
-    <Stack direction="row" overflow="auto" flex="1">
-      <Stack w="340px" flexShrink={0} overflow="auto" gap="6">
+    <Stack direction="row" overflow="auto" flex="1" gap="7">
+      <Stack w="340px" flexShrink={0} overflow="auto" gap="6" p="1">
         <DomainSelect required control={form.control} name="domain" />
         <FormControl
           required
@@ -56,23 +69,20 @@ function DeviceCreateForm() {
         />
         <Separator />
         <Switch label={t("device.autodiscover")} description={t("device.automaticallyDiscoverType")} control={form.control} name="autoDiscover" />
+        {!autoDiscover && (
+          <DeviceTypeSelect required label={t("device.type")} control={form.control} name="deviceType" />
+        )}
       </Stack>
-      {!autoDiscover && (
+      {showRightColumn && (
         <>
           <Separator orientation="vertical" />
-          <Stack flex="1" overflow="auto" gap="6">
-            <DeviceTypeSelect required label={t("device.type")} control={form.control} name="deviceType" />
-            {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
-              <>
-                <Separator />
-                <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType.accessDefinitions} />
-              </>
+          <Stack flex="1" overflow="auto" gap="6" p="1">
+            {hasAccesses && (
+              <DeviceAccessFields control={form.control} setValue={form.setValue} accessDefinitions={selectedDeviceType!.accessDefinitions} />
             )}
-            {selectedDeviceType && Object.keys(selectedDeviceType.options ?? {}).length > 0 && (
-              <>
-                <Separator />
-                <DeviceOptionFields control={form.control} setValue={form.setValue} optionDefinitions={selectedDeviceType.options} />
-              </>
+            {hasAccesses && hasOptions && <Separator />}
+            {hasOptions && (
+              <DeviceOptionFields control={form.control} setValue={form.setValue} optionDefinitions={selectedDeviceType!.options} />
             )}
           </Stack>
         </>
@@ -143,7 +153,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
 
         taskDialog.open(<TaskDialog id={task!.id} />)
       },
-      size: "4xl",
+      size: COLLAPSED_SIZE,
       submitButton: {
         label: t("common.create"),
       },

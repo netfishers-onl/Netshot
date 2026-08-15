@@ -18,7 +18,7 @@ export default function EditDiagnosticScript(props: EditDiagnosticScriptProps) {
 
   return (
     <Stack direction="row" gap="7" overflow="auto" flex="1">
-      <Stack w="340px" overflow="auto">
+      <Stack w="340px" overflow="auto" p="1">
         <EditDiagnosticForm type={type} />
       </Stack>
       <Stack flex="1">

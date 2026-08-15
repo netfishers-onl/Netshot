@@ -81,8 +81,7 @@ function ConfigureStep(props: ConfigureStepProps) {
       w={isExpanded ? "280px" : "full"}
       flexShrink={0}
       h={isExpanded ? "full" : undefined}
-      p="3"
-      pe={isExpanded ? "4" : "3"}
+      p="1"
     >
       <DeviceTypeSelect
         required

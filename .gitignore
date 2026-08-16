@@ -128,3 +128,7 @@ src/main/resources/configs/
 netshot.conf
 .vscode
 certs
+
+### Docs (Zensical) ###
+site/
+.venv/

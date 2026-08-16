@@ -13,6 +13,8 @@ https://www.netshot.net
   * Brocade FastIron
   * Fortinet FortiOS
   * Alcatel-Lucent TiMOS
+  * Oracle Acme Packet OS
+  * Citrix NetScaler SDX
   * ...
   * Check https://github.com/netshot-net/Netshot/tree/master/src/main/resources/drivers for the complete list of current "official" drivers
 * Network inventory
@@ -26,7 +28,7 @@ https://www.netshot.net
 
 ## How to start
 
-Go to the Wiki page https://github.com/netshot-net/Netshot/wiki for installation and other instructions.
+Go to https://docs.netshot.net for installation and other instructions.
 
 ## Contact
 

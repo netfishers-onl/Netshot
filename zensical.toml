@@ -1,0 +1,123 @@
+[project]
+site_name = "Netshot"
+site_description = "Configuration and Compliance Management Software for network devices"
+site_url = "https://docs.netshot.net/"
+
+repo_url = "https://github.com/netshot-net/Netshot"
+repo_name = "netshot-net/Netshot"
+edit_uri = "edit/master/docs/"
+
+nav = [
+  { "Overview" = "index.md" },
+  { "Architecture" = "architecture.md" },
+  { "Installation" = [
+    { "Docker" = "installation/docker.md" },
+    { "Linux server" = "installation/linux.md" },
+    { "Building from source" = "installation/building-from-source.md" },
+  ] },
+  { "Upgrading" = "upgrading.md" },
+  { "User guide" = [
+    { "Devices" = "user-guide/devices.md" },
+    { "Diagnostics" = "user-guide/diagnostics.md" },
+    { "Compliance" = "user-guide/compliance.md" },
+    { "Reports" = "user-guide/reports.md" },
+    { "Tasks" = "user-guide/tasks.md" },
+    { "Administration" = "user-guide/administration.md" },
+    { "Device drivers" = "user-guide/device-drivers.md" },
+  ] },
+  { "Examples" = [
+    { "Compliance rule: text-based" = "examples/compliance-rule-text.md" },
+    { "Compliance rule: script-based" = "examples/compliance-rule-script.md" },
+    { "Diagnostic example" = "examples/diagnostic.md" },
+  ] },
+  { "Clustering and High Availability" = "clustering-ha.md" },
+  { "Configuration reference" = "configuration-reference.md" },
+  { "API and integrations" = [
+    { "REST API" = "api/rest-api.md" },
+    { "Webhooks" = "api/webhooks.md" },
+  ] },
+  { "Extending Netshot" = [
+    { "Writing a new driver" = "extending/writing-a-driver.md" },
+    { "Loading an alternative driver" = "extending/loading-a-driver.md" },
+    { "Python virtualenv for additional packages" = "extending/python-virtualenv.md" },
+  ] },
+  { "Troubleshooting" = "troubleshooting.md" },
+]
+
+[project.extra.version]
+provider = "mike"
+default = "latest"
+alias = true
+
+[project.theme]
+language = "en"
+logo = "assets/logo.svg"
+favicon = "assets/favicon.ico"
+features = [
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/netshot-net/Netshot"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+toc.permalink = true
+pymdownx.betterem = {}
+pymdownx.caret = {}
+pymdownx.details = {}
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+pymdownx.highlight.anchor_linenums = true
+pymdownx.highlight.line_spans = "__span"
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.magiclink = {}
+pymdownx.mark = {}
+pymdownx.smartsymbols = {}
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+pymdownx.tabbed.alternate_style = true
+pymdownx.tabbed.combine_header_slug = true
+pymdownx.tasklist.custom_checkbox = true
+pymdownx.tilde = {}

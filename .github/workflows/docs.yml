@@ -31,6 +31,17 @@ jobs:
       - name: Deploy bleeding-edge docs
         run: uv run mike deploy --push dev
 
+      - name: Bootstrap a default version if none exists yet
+        # Until the first GitHub Release is published, deploy-release below never runs,
+        # so mike never sets a default and the site root 404s. Fall back to "dev" as the
+        # default so the root resolves; once a release sets "latest" as default, the root
+        # index.html this creates gets overwritten and this step becomes a permanent no-op.
+        run: |
+          git fetch origin gh-pages
+          if ! git cat-file -e origin/gh-pages:index.html 2>/dev/null; then
+            uv run mike set-default --push dev
+          fi
+
   deploy-release:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest

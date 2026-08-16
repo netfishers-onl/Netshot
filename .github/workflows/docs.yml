@@ -28,8 +28,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy bleeding-edge docs (dev alias)
-        run: uv run mike deploy --push --update-aliases dev dev
+      - name: Deploy bleeding-edge docs
+        run: uv run mike deploy --push dev
 
   deploy-release:
     if: github.event_name == 'release'

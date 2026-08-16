@@ -1,5 +1,5 @@
 # Netshot Configuration File
-# See https://github.com/netfishers-onl/Netshot/wiki/Config-file-(netshot.conf)-reference
+# See https://github.com/netshot-net/Netshot/wiki/Config-file-(netshot.conf)-reference
 
 # Log file and level
 netshot.log.file = CONSOLE

@@ -7,9 +7,9 @@ or contact us at contact@netshot.net.
 
 INSTALLATION AND UPGRADE INSTRUCTIONS:
 
-Please refer to https://github.com/netfishers-onl/Netshot/wiki
+Please refer to https://github.com/netshot-net/Netshot/wiki
 
 
 DOWNLOADS AND RELEASE HISTORY:
 
-https://github.com/netfishers-onl/Netshot/releases
+https://github.com/netshot-net/Netshot/releases

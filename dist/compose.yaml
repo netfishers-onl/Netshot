@@ -2,7 +2,7 @@ name: netshot
 
 services:
   netshot:
-    image: ghcr.io/netfishers-onl/netshot:latest
+    image: ghcr.io/netshot-net/netshot:latest
     restart: unless-stopped
     environment:
       NETSHOT_DB_URL: "jdbc:postgresql://database/netshot01"

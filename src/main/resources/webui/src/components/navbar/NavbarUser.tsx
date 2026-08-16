@@ -121,7 +121,7 @@ export default function NavbarUser() {
             <Menu.Separator />
             <Menu.Item value="user-guide" asChild>
               <a
-                href="https://github.com/netfishers-onl/Netshot/wiki/Netshot-User-Guide"
+                href="https://github.com/netshot-net/Netshot/wiki/Netshot-User-Guide"
                 target="_blank"
                 rel="noreferrer"
               >

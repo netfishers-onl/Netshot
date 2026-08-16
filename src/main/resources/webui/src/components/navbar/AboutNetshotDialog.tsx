@@ -57,7 +57,7 @@ function AboutContent() {
             </a>
           </Button>
           <Button asChild>
-            <a target="_blank" href="https://github.com/netfishers-onl/Netshot" rel="noreferrer">
+            <a target="_blank" href="https://github.com/netshot-net/Netshot" rel="noreferrer">
               <LuGithub />
               {t("policy.rule.sourceCode")}
             </a>

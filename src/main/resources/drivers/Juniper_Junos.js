@@ -316,7 +316,7 @@ function snapshot(cli, device, config) {
 					usage: "PRIMARY"
 				});
 			}
-			var ipv6Pattern = /^ +(Destination: [0-9a-f\\:]+\/([0-9]+), )?Local: ([0-9a-f\\:]+)/mg;
+			var ipv6Pattern = /^ +(Destination: [0-9a-f\\:]+\/([0-9]+), )+Local: ([0-9a-f\\:]+)/mg;
 			var ipv6Match;
 			while (ipv6Match = ipv6Pattern.exec(logicalInterfaces[j].config)) {
 				lni.ip.push({

@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "Netshot Team",
-	version: "3.2"
+	version: "3.3"
 };
 
 var Config = {
@@ -307,7 +307,7 @@ function snapshot(cli, device, config) {
 			if (description) {
 				lni.description = description[1];
 			}
-			var ipPattern = /^ +(Destination: [0-9\.]+(?:\/([0-9]+))?, )?Local: ([0-9\.]+)/mg;
+			var ipPattern = /^ +(Destination: [0-9\.]+(?:\/([0-9]+))?(?:[\.0-9]*), )?Local: ([0-9\.]+)/mg;
 			var ipMatch;
 			while (ipMatch = ipPattern.exec(logicalInterfaces[j].config)) {
 				lni.ip.push({
@@ -316,7 +316,7 @@ function snapshot(cli, device, config) {
 					usage: "PRIMARY"
 				});
 			}
-			var ipv6Pattern = /^ +(Destination: [0-9a-f\\:]+\/([0-9]+), )?Local: ([0-9a-f\\:]+),/mg;
+			var ipv6Pattern = /^ +(Destination: [0-9a-f\\:]+\/([0-9]+), )?Local: ([0-9a-f\\:]+)/mg;
 			var ipv6Match;
 			while (ipv6Match = ipv6Pattern.exec(logicalInterfaces[j].config)) {
 				lni.ip.push({

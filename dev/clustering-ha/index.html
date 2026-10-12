@@ -492,6 +492,8 @@
       
         
       
+        
+      
     
     
     
@@ -604,6 +606,33 @@
     
   
   Compliance
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/script-toolbox/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Script toolbox
 
     
   </span>
@@ -1009,6 +1038,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Communication between members
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-and-device-locking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Task and device locking
       </span>
     </span>
   </a>
@@ -1534,6 +1574,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#task-and-device-locking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Task and device locking
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#user-interface" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1698,6 +1749,15 @@
 <p>Each instance joining the cluster requires a unique identifier. This should be set up in the <a href="../configuration-reference/">configuration reference</a>. If the configuration is missing, an ID will be automatically generated, but this is not recommended as the ID could change after a restart.</p>
 <h3 id="communication-between-members">Communication between members<a class="headerlink" href="#communication-between-members" title="Permanent link">&para;</a></h3>
 <p>Cluster members exchange HA messages using the PostgreSQL notification system as message bus. Thus, there is no need to open an additional protocol/port on firewalls, or to install anything else. Only access to the PostgreSQL server/cluster from each Netshot cluster member is required.</p>
+<p>Each member sends a hello message every 6 seconds; a member not heard from for 30 seconds is considered gone. Hello messages are handled by a dedicated thread with its own database connection, while the actions triggered by cluster messages (loading or assigning tasks, refreshing drivers...) run on a separate worker thread using a small dedicated connection pool (see <code>netshot.db.pooler.system.*</code> in the <a href="../configuration-reference/">configuration reference</a>): a busy instance (e.g. with all its task threads running long device sessions) keeps announcing itself to the cluster.</p>
+<h3 id="task-and-device-locking">Task and device locking<a class="headerlink" href="#task-and-device-locking" title="Permanent link">&para;</a></h3>
+<p>Running tasks hold PostgreSQL advisory locks (on one dedicated database connection per member), which guarantee across the cluster that:</p>
+<ul>
+<li>a task never runs twice at the same time;</li>
+<li>only one task works on a given device at a time (see <a href="../user-guide/tasks/#tasks-on-the-same-device">Tasks on the same device</a>).</li>
+</ul>
+<p>When a member is considered gone, the master reassigns its tasks to the other runners, except the tasks still holding their lock: a member which only stopped sending hello messages for a while (but is still connected to the database and running its tasks) is left to complete them. If the member really died, PostgreSQL releases its locks once its connection is detected as dead (TCP keepalives, about one minute), and the master then reassigns these tasks within the next minute.</p>
+<p>Advisory locks (as well as the notification system) require session-level database connections: when using a connection pooler such as PgBouncer in front of PostgreSQL, it must be in <em>session</em> pooling mode.</p>
 <h3 id="user-interface">User interface<a class="headerlink" href="#user-interface" title="Permanent link">&para;</a></h3>
 <p>The northbound interface (Web GUI, REST API) remains available on all cluster members, whatever their actual role.</p>
 <p>Dedicated API endpoints are available to retrieve the clustering status (see the OpenAPI browser).</p>

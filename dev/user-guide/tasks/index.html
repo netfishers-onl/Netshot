@@ -494,6 +494,8 @@
       
         
       
+        
+      
     
     
     
@@ -625,6 +627,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../script-toolbox/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Script toolbox
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reports/" class="md-nav__link">
         
   
@@ -715,6 +744,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Task hierarchy
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tasks-on-the-same-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tasks on the same device
       </span>
     </span>
   </a>
@@ -1352,6 +1392,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tasks-on-the-same-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tasks on the same device
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#script-chaining" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1431,6 +1482,8 @@
       
         
       
+        
+      
     
     
     
@@ -1466,6 +1519,13 @@
 <p>Schedule a global task via <strong>Schedule...</strong> in the main toolbar. To see the task history of a single device, open its <strong>Tasks</strong> tab from the <a href="../devices/">Devices</a> view.</p>
 <h2 id="task-hierarchy">Task hierarchy<a class="headerlink" href="#task-hierarchy" title="Permanent link">&para;</a></h2>
 <p>A task run over a group of devices (a snapshot, a script run, a diagnostic, a compliance check...) is a <strong>parent task</strong> that spawns one <strong>child task per device</strong>, run in parallel. The task list shows this hierarchy, so you can drill from the group-level result down to what happened on each individual device. A parent task's own status reflects whether it managed to schedule its children, not the per-device outcomes — a failure on one device doesn't by itself fail the parent.</p>
+<h2 id="tasks-on-the-same-device">Tasks on the same device<a class="headerlink" href="#tasks-on-the-same-device" title="Permanent link">&para;</a></h2>
+<p>Only one task works on a given device at a time (snapshot, diagnostics and script tasks; compliance checks only use the stored configuration and are not concerned). When such a task starts while another one is already working on the same device:</p>
+<ul>
+<li>a <strong>snapshot</strong> or <strong>diagnostics</strong> task is <strong>cancelled</strong> if a task of the same type is already running or waiting on the device (the other one will capture the current state anyway); a recurring task is still rescheduled for its next occurrence;</li>
+<li>otherwise, the task <strong>waits</strong> for the device to be released (it shows as running, and its log says which task it is waiting for). <strong>Script</strong> tasks are never cancelled because of another task: they always wait for their turn.</li>
+</ul>
+<p>A task waiting for a device can be cancelled from its task dialog (<strong>Cancel task</strong>). This only works while it is still waiting: a task already working on the device can't be stopped. A recurring task cancelled this way is not rescheduled.</p>
 <h2 id="script-chaining">Script chaining<a class="headerlink" href="#script-chaining" title="Permanent link">&para;</a></h2>
 <p>When running a script against a device (or a group), you can ask Netshot to automatically:</p>
 <ul>

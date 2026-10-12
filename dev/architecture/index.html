@@ -605,6 +605,8 @@
       
         
       
+        
+      
     
     
     
@@ -717,6 +719,33 @@
     
   
   Compliance
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/script-toolbox/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Script toolbox
 
     
   </span>
@@ -1477,7 +1506,7 @@
 <h2 id="core-server">Core server<a class="headerlink" href="#core-server" title="Permanent link">&para;</a></h2>
 <p>The core server is a Java application. It is organized into a set of packages under <code>net.netshot.netshot</code>, each responsible for one concern:</p>
 <ul>
-<li><strong><code>work</code></strong> — the task engine. <code>Task</code> and its subclasses (under <code>work.tasks</code>) represent scheduled or on-demand jobs — snapshots, scans, script runs, diagnostics — with support for hierarchical (parent/child) tasks. <code>MasterJob</code> drives execution on the cluster's elected master.</li>
+<li><strong><code>work</code></strong> — the task engine. <code>Task</code> and its subclasses (under <code>work.tasks</code>) represent scheduled or on-demand jobs — snapshots, scans, script runs, diagnostics — with support for hierarchical (parent/child) tasks. <code>MasterJob</code> drives execution on the cluster's elected master. <code>TaskJob</code> runs a task on a runner, using <code>TaskLockManager</code> (PostgreSQL advisory locks in cluster mode) so that a task never runs twice and only one task works on a given device at a time.</li>
 <li><strong><code>device</code></strong> — the device model and connection handling: <code>Device</code>, <code>NetworkInterface</code>, <code>Module</code>, device groups (<code>StaticDeviceGroup</code>, <code>DynamicDeviceGroup</code>), and the <code>Finder</code> query engine behind device search. Sub-packages handle device network <strong><code>access</code></strong> (management addresses and per-access connection settings), <strong><code>credentials</code></strong> (CLI/HTTP/SNMP accounts, local or Vault-backed), <strong><code>attribute</code></strong> (custom device/config attributes), <strong><code>collector</code></strong> (pulling data off a live session), and <strong><code>script</code></strong> (running scripts against a device over SSH/Telnet/HTTP/SNMP).</li>
 <li><strong><code>compliance</code></strong> — the rule engine: <code>Policy</code>, <code>Rule</code> and its subclasses (<code>SoftwareRule</code>, <code>HardwareRule</code>, plus config rules), <code>CheckResult</code>, and <code>Exemption</code>.</li>
 <li><strong><code>diagnostic</code></strong> — diagnostic definitions (<code>SimpleDiagnostic</code>, <code>JavaScriptDiagnostic</code>, <code>PythonDiagnostic</code>) and their typed results (<code>DiagnosticTextResult</code>, <code>DiagnosticNumericResult</code>, <code>DiagnosticBinaryResult</code>, <code>DiagnosticLongTextResult</code>).</li>
